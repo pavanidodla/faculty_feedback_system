@@ -48,7 +48,6 @@ const ManageSubjects = () => {
     e.preventDefault();
 
     try {
-
       if (editId) {
         await API.put(`/academic/${editId}`, form);
         alert("Updated Successfully ✅");
@@ -74,33 +73,28 @@ const ManageSubjects = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete Subject ?")) return;
-
     await API.delete(`/academic/${id}`);
     loadSubjects();
     alert("Deleted Successfully ✅");
   };
 
   const handleEdit = (item) => {
-
-  setForm({
-    year: item.year || "",
-    semester: item.semester || "",
-    branch: item.branch || "",
-    subject: item.subject || "",
-    facultyList: item.facultyList?.length ? item.facultyList : [""]
-  });
-
-  setEditId(item._id);
-};
+    setForm({
+      year: item.year || "",
+      semester: item.semester || "",
+      branch: item.branch || "",
+      subject: item.subject || "",
+      facultyList: item.facultyList?.length ? item.facultyList : [""]
+    });
+    setEditId(item._id);
+  };
 
   return (
     <div className="container">
 
       <h1 className="title">📚 Academic Subject Management</h1>
 
-      {/* Form Card */}
       <div className="card">
-
         <form onSubmit={handleSubmit}>
 
           <select
@@ -176,16 +170,13 @@ const ManageSubjects = () => {
           </button>
 
         </form>
-
       </div>
 
-      {/* Subject List */}
       <h2 className="sectionTitle">Existing Subjects</h2>
 
       {subjects.map(item => (
         <div key={item._id} className="subjectCard">
-
-          <div>
+          <div className="subjectInfo">
             <h3>{item.subject}</h3>
             <p>{item.year} | {item.semester} | {item.branch}</p>
           </div>
@@ -199,7 +190,6 @@ const ManageSubjects = () => {
               Delete
             </button>
           </div>
-
         </div>
       ))}
 
@@ -207,6 +197,7 @@ const ManageSubjects = () => {
         body{
           background: linear-gradient(135deg,#e3f2fd,#fce4ec);
           font-family:Segoe UI;
+          margin:0;
         }
 
         .container{
@@ -289,6 +280,56 @@ const ManageSubjects = () => {
 
         .sectionTitle{
           margin-top:50px;
+        }
+
+        /* ================= MOBILE VIEW ================= */
+
+        @media(max-width: 768px){
+
+          .container{
+            padding:20px;
+          }
+
+          .card{
+            padding:20px;
+          }
+
+          .subjectCard{
+            flex-direction:column;
+            align-items:flex-start;
+          }
+
+          .actionBtns{
+            margin-top:15px;
+            width:100%;
+            display:flex;
+            justify-content:flex-end;
+          }
+
+          .editBtn, .deleteBtn{
+            padding:10px 14px;
+          }
+
+        }
+
+        @media(max-width: 480px){
+
+          .container{
+            padding:10px;
+          }
+
+          .title{
+            font-size:22px;
+          }
+
+          .card{
+            padding:15px;
+          }
+
+          .subjectCard{
+            padding:15px;
+          }
+
         }
 
       `}</style>
