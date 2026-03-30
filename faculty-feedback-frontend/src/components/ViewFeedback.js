@@ -25,24 +25,21 @@ const ViewFeedback = () => {
       setFeedbacks(res.data);
       setSummary(groupFacultyData(res.data));
     } catch (err) {
-      console.error(err);
       setError("Failed to load feedback");
     } finally {
       setLoading(false);
     }
   };
 
-  // ================= FACULTY GROUPING =================
+  /* ================= GROUPING LOGIC (unchanged) ================= */
   const groupFacultyData = (data) => {
     const facultyMap = {};
-
     data.forEach((fb) => {
       fb.feedbacks.forEach((item) => {
         const faculty = item.faculty;
         const key = `${item.subject}|${fb.branch}|${fb.year}`;
 
         if (!facultyMap[faculty]) facultyMap[faculty] = {};
-
         if (!facultyMap[faculty][key]) {
           facultyMap[faculty][key] = {
             subject: item.subject,
@@ -60,7 +57,6 @@ const ViewFeedback = () => {
         }
 
         const entry = facultyMap[faculty][key];
-
         entry.students.add(fb.studentId);
 
         if (Array.isArray(item.ratings)) {
@@ -98,9 +94,8 @@ const ViewFeedback = () => {
     }));
   };
 
-  // ================= FILTERS =================
-  const applyFilters = (faculties) => {
-    return faculties.map((fac) => ({
+  const applyFilters = (faculties) =>
+    faculties.map((fac) => ({
       ...fac,
       rows: fac.rows.filter(
         (r) =>
@@ -109,11 +104,10 @@ const ViewFeedback = () => {
           (filters.year === "All" || r.year === filters.year)
       ),
     }));
-  };
 
   const filteredSummary = applyFilters(summary);
 
-  // ================= EXCEL EXPORT =================
+  /* ================= EXCEL EXPORT (unchanged) ================= */
   const exportFacultySheets = () => {
     const workbook = XLSX.utils.book_new();
 
@@ -155,7 +149,7 @@ const ViewFeedback = () => {
       <div style={styles.container}>
         <h2 style={styles.heading}>📊 Faculty Feedback Dashboard</h2>
 
-        {/* Filters */}
+        {/* FILTERS */}
         <div style={styles.filters}>
           <select
             style={styles.select}
@@ -203,76 +197,67 @@ const ViewFeedback = () => {
           </button>
         </div>
 
-        {/* Faculty Tables */}
+        {/* TABLES */}
         {filteredSummary.map((fac, i) => (
           <div key={i} style={styles.facultyCard}>
             <h3 style={styles.facultyTitle}>👨‍🏫 {fac.faculty}</h3>
 
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  <th style={styles.th}>Subject</th>
-                  <th style={styles.th}>Branch</th>
-                  <th style={styles.th}>Campus</th>
-                  <th style={styles.th}>Year</th>
-                  <th style={styles.th}>Students</th>
-                  <th style={styles.th}>Avg Rating</th>
-                  <th style={styles.th}>Positive</th>
-                  <th style={styles.th}>Neutral</th>
-                  <th style={styles.th}>Negative</th>
-                  <th style={styles.th}>Overall</th>
-                </tr>
-              </thead>
-              <tbody>
-                {fac.rows.map((row, j) => (
-                  <tr key={j}>
-                    <td style={styles.td}>{row.subject}</td>
-                    <td style={styles.td}>{row.branch}</td>
-                    <td style={styles.td}>{row.campus}</td>
-                    <td style={styles.td}>{row.year}</td>
-                    <td style={styles.td}>{row.studentCount}</td>
-                    <td style={styles.td}>{row.avgRating}</td>
-
-                    <td style={{ ...styles.td, color: "green" }}>
-                      {row.positive}
-                    </td>
-                    <td style={{ ...styles.td, color: "orange" }}>
-                      {row.neutral}
-                    </td>
-                    <td style={{ ...styles.td, color: "red" }}>
-                      {row.negative}
-                    </td>
-
-                    <td
-                      style={{
-                        ...styles.td,
-                        fontWeight: "bold",
-                        color:
-                          row.overallSentiment === "Positive"
-                            ? "green"
-                            : row.overallSentiment === "Negative"
-                            ? "red"
-                            : "orange",
-                      }}
-                    >
-                      {row.overallSentiment}
-                    </td>
+            {/* SCROLL WRAPPER */}
+            <div style={styles.tableWrapper}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>Subject</th>
+                    <th style={styles.th}>Branch</th>
+                    <th style={styles.th}>Campus</th>
+                    <th style={styles.th}>Year</th>
+                    <th style={styles.th}>Students</th>
+                    <th style={styles.th}>Avg Rating</th>
+                    <th style={styles.th}>Positive</th>
+                    <th style={styles.th}>Neutral</th>
+                    <th style={styles.th}>Negative</th>
+                    <th style={styles.th}>Overall</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {fac.rows.map((row, j) => (
+                    <tr key={j}>
+                      <td style={styles.td}>{row.subject}</td>
+                      <td style={styles.td}>{row.branch}</td>
+                      <td style={styles.td}>{row.campus}</td>
+                      <td style={styles.td}>{row.year}</td>
+                      <td style={styles.td}>{row.studentCount}</td>
+                      <td style={styles.td}>{row.avgRating}</td>
+                      <td style={{ ...styles.td, color: "green" }}>{row.positive}</td>
+                      <td style={{ ...styles.td, color: "orange" }}>{row.neutral}</td>
+                      <td style={{ ...styles.td, color: "red" }}>{row.negative}</td>
+                      <td style={styles.td}>{row.overallSentiment}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         ))}
       </div>
+
+      {/* RESPONSIVE CSS */}
+      <style>{`
+        @media (max-width: 768px) {
+          .container {
+            padding: 15px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };
 
-// ================= STYLES =================
+/* ================= RESPONSIVE STYLES ================= */
 const styles = {
   page: {
     minHeight: "100vh",
-    padding: "40px",
+    padding: "20px",
     background: "linear-gradient(135deg,#eef2ff,#e0f2fe)",
   },
 
@@ -285,50 +270,21 @@ const styles = {
     boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
   },
 
-  heading: {
-    textAlign: "center",
-    marginBottom: "20px",
-    color: "#1e3a8a",
-  },
-
   filters: {
     display: "flex",
     gap: "10px",
-    marginBottom: "20px",
     flexWrap: "wrap",
+    marginBottom: "20px",
   },
 
-  select: {
-    padding: "8px",
-    borderRadius: "6px",
-    border: "1px solid #ccc",
-  },
-
-  exportBtn: {
-    background: "#2563eb",
-    color: "#fff",
-    padding: "8px 14px",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-  },
-
-  facultyCard: {
-    marginBottom: "30px",
-    border: "1px solid #e5e7eb",
-    borderRadius: "10px",
-    padding: "15px",
-    background: "#f9fafb",
-  },
-
-  facultyTitle: {
-    marginBottom: "10px",
-    color: "#374151",
+  tableWrapper: {
+    overflowX: "auto",
   },
 
   table: {
     width: "100%",
     borderCollapse: "collapse",
+    minWidth: "900px", // ensures scroll instead of squeezing
   },
 
   th: {
@@ -343,8 +299,15 @@ const styles = {
     textAlign: "center",
   },
 
+  facultyCard: {
+    marginBottom: "25px",
+    padding: "15px",
+    borderRadius: "10px",
+    background: "#f9fafb",
+  },
+
   loading: { textAlign: "center" },
-  error: { color: "red", textAlign: "center" },
+  error: { textAlign: "center", color: "red" },
 };
 
 export default ViewFeedback;
