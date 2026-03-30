@@ -16,8 +16,10 @@ def analyze_sentiment():
 
     if polarity > 0:
         sentiment = "Positive"
+        
     elif polarity < 0:
         sentiment = "Negative"
+        
     else:
         sentiment = "Neutral"
 
