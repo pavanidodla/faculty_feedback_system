@@ -197,5 +197,4 @@ router.post("/google", async (req, res) => {
     });
   }
 });
-
 export default router;
