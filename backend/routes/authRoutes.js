@@ -7,6 +7,7 @@ import User from "../models/User.js";
 const router = express.Router();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+
 /* ================= REGISTER ================= */
 router.post("/register", async (req, res) => {
   try {
