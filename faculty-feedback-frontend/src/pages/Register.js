@@ -26,7 +26,7 @@ export default function Register() {
       );
     }
 
-    const res = await API.post("api/auth/register", {
+    const res = await API.post("/auth/register", {
       name,
       email,
       password,
@@ -108,95 +108,81 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    minHeight: "100vh",
+    height: "100vh",
     background: "#f4f6f8",
-    padding: "10px",
+    padding: "20px",
   },
-
   container: {
     display: "flex",
-    flexDirection: "row",   // always side-by-side
-    width: "100%",
-    maxWidth: "900px",
-    height: "auto",
+    width: "700px",
+    height: "450px",
     boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
     borderRadius: "12px",
     overflow: "hidden",
-    background: "#fff",
   },
-
   left: {
-    flex: "0.9",           // slightly smaller image on mobile
-    minHeight: "250px",
+    flex: 1,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    background: "#e0e0e0",
+    padding: "15px",
+    position: "relative",
   },
-
   image: {
     width: "100%",
     height: "100%",
     objectFit: "cover",
+    borderRadius: "12px",
   },
-
   right: {
-    flex: "1.1",           // give form more space
+    flex: 1,
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    padding: "15px",
+    background: "#ffffff",
+    padding: "20px",
   },
-
   card: {
     width: "100%",
-    maxWidth: "320px",
     display: "flex",
     flexDirection: "column",
     textAlign: "center",
+    padding: "10px",
   },
-
-  title: {
-    marginBottom: "12px",
-    fontSize: "20px",
-    fontWeight: "bold",
-  },
-
+  title: { marginBottom: "15px", fontSize: "22px", fontWeight: "bold" },
   input: {
     width: "100%",
     padding: "10px",
-    margin: "6px 0",
+    margin: "8px 0",
     borderRadius: "5px",
     border: "1px solid #ccc",
-    fontSize: "14px",
   },
-
   registerBtn: {
     width: "100%",
     padding: "10px",
-    marginTop: "8px",
+    marginTop: "10px",
     background: "#28a745",
     color: "white",
     border: "none",
     borderRadius: "5px",
     cursor: "pointer",
-    fontSize: "15px",
   },
-
   loginText: {
-    marginTop: "10px",
-    fontSize: "13px",
+    marginTop: "12px",
+    fontSize: "14px",
   },
-
   loginLink: {
     color: "#1e88e5",
     cursor: "pointer",
     fontWeight: "bold",
   },
-
   error: {
     color: "red",
-    fontSize: "13px",
+    fontSize: "14px",
   },
-
   success: {
     color: "green",
-    fontSize: "13px",
+    fontSize: "14px",
   },
 };
