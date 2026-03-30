@@ -9,8 +9,14 @@ const DashboardHome = () => {
   const [branchFilter, setBranchFilter] = useState("All");
   const [search, setSearch] = useState("");
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
   useEffect(() => {
     fetchLeaderboard();
+
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -25,8 +31,6 @@ const DashboardHome = () => {
       console.error("Error fetching leaderboard", err);
     }
   };
-
-  /* ===================== FILTERING ===================== */
 
   const applyFilters = () => {
     let data = [...leaderboard];
@@ -61,23 +65,14 @@ const DashboardHome = () => {
     setFilteredData(data);
   };
 
-  /* ===================== PERFORMANCE LABEL ===================== */
-
   const getPerformanceStyle = (rating) => {
     const num = Number(rating);
 
-    if (num >= 4.5) {
-      return { label: "Excellent", color: "#16a34a" };
-    } else if (num >= 4) {
-      return { label: "Very Good", color: "#2563eb" };
-    } else if (num >= 3) {
-      return { label: "Average", color: "#d97706" };
-    } else {
-      return { label: "Poor", color: "#dc2626" };
-    }
+    if (num >= 4.5) return { label: "Excellent", color: "#16a34a" };
+    if (num >= 4) return { label: "Very Good", color: "#2563eb" };
+    if (num >= 3) return { label: "Average", color: "#d97706" };
+    return { label: "Poor", color: "#dc2626" };
   };
-
-  /* ===================== DOWNLOAD CSV ===================== */
 
   const downloadCSV = () => {
     let rows = [
@@ -124,25 +119,23 @@ const DashboardHome = () => {
     link.click();
   };
 
-  /* ===================== UI ===================== */
-
   return (
-    <div style={{ padding: "20px", fontFamily: "Segoe UI" }}>
-      <h1 style={{ marginBottom: "20px" }}>Faculty Feedback Dashboard</h1>
+    <div style={styles.page(isMobile)}>
+      <h1 style={styles.heading(isMobile)}>Faculty Feedback Dashboard</h1>
 
       {/* Filters */}
-      <div style={filterBox}>
+      <div style={styles.filterBox(isMobile)}>
         <input
           placeholder="🔍 Search Faculty"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={input}
+          style={styles.input(isMobile)}
         />
 
         <select
           value={campusFilter}
           onChange={(e) => setCampusFilter(e.target.value)}
-          style={input}
+          style={styles.input(isMobile)}
         >
           <option>All</option>
           <option>RK Valley</option>
@@ -154,7 +147,7 @@ const DashboardHome = () => {
         <select
           value={branchFilter}
           onChange={(e) => setBranchFilter(e.target.value)}
-          style={input}
+          style={styles.input(isMobile)}
         >
           <option>All</option>
           <option>CSE</option>
@@ -166,67 +159,64 @@ const DashboardHome = () => {
           <option>MME</option>
         </select>
 
-        <button onClick={downloadCSV} style={downloadBtn}>
+        <button onClick={downloadCSV} style={styles.downloadBtn(isMobile)}>
           ⬇ Download CSV
         </button>
       </div>
 
       {/* Faculty Cards */}
       {filteredData.map((fac, idx) => (
-        <div key={idx} style={facultyCard}>
-          <h2 style={{ marginBottom: "10px" }}>{fac.faculty}</h2>
+        <div key={idx} style={styles.facultyCard(isMobile)}>
+          <h2>{fac.faculty}</h2>
 
           {Object.entries(fac.campuses || {}).map(([campus, branches]) => (
-            <div key={campus} style={campusBox}>
-              <h3 style={{ color: "#1e3a8a" }}>🏫 {campus}</h3>
+            <div key={campus} style={styles.campusBox}>
+              <h3>🏫 {campus}</h3>
 
               {Object.entries(branches || {}).map(([branch, years]) => (
                 <div key={branch}>
-                  <h4 style={{ marginTop: "10px" }}>📘 {branch}</h4>
+                  <h4>📘 {branch}</h4>
 
-                  <table style={table}>
-                    <thead>
-                      <tr style={{ background: "#0ea5e9", color: "#fff" }}>
-                        <th style={th}>Year</th>
-                        <th style={th}>Rating</th>
-                        <th style={th}>Status</th>
-                        <th style={th}>Weak Area</th>
-                        <th style={th}>Responses</th>
-                      </tr>
-                    </thead>
+                  {/* Scroll wrapper for mobile */}
+                  <div style={styles.tableWrapper}>
+                    <table style={styles.table}>
+                      <thead>
+                        <tr style={styles.tableHeader}>
+                          <th style={styles.th}>Year</th>
+                          <th style={styles.th}>Rating</th>
+                          <th style={styles.th}>Status</th>
+                          <th style={styles.th}>Weak Area</th>
+                          <th style={styles.th}>Responses</th>
+                        </tr>
+                      </thead>
 
-                    <tbody>
-                      {Object.entries(years || {}).map(([year, data], i) => {
-                        const perf = getPerformanceStyle(data?.rating);
-
-                        return (
-                          <tr key={i}>
-                            <td style={td}>{year}</td>
-                            <td style={td}>{data?.rating || "-"}</td>
-
-                            <td style={td}>
-                              <span
-                                style={{
-                                  background: perf.color,
-                                  color: "#fff",
-                                  padding: "4px 12px",
-                                  borderRadius: "15px",
-                                }}
-                              >
-                                {perf.label}
-                              </span>
-                            </td>
-
-                            <td style={{ ...td, color: "#dc2626" }}>
-                              {data?.weakArea || "-"}
-                            </td>
-
-                            <td style={td}>{data?.responses || 0}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                      <tbody>
+                        {Object.entries(years || {}).map(([year, data], i) => {
+                          const perf = getPerformanceStyle(data?.rating);
+                          return (
+                            <tr key={i}>
+                              <td style={styles.td}>{year}</td>
+                              <td style={styles.td}>{data?.rating || "-"}</td>
+                              <td style={styles.td}>
+                                <span
+                                  style={{
+                                    background: perf.color,
+                                    color: "#fff",
+                                    padding: "4px 12px",
+                                    borderRadius: "15px",
+                                  }}
+                                >
+                                  {perf.label}
+                                </span>
+                              </td>
+                              <td style={styles.td}>{data?.weakArea || "-"}</td>
+                              <td style={styles.td}>{data?.responses || 0}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               ))}
             </div>
@@ -239,56 +229,81 @@ const DashboardHome = () => {
 
 /* ===================== STYLES ===================== */
 
-const filterBox = {
-  display: "flex",
-  gap: "10px",
-  marginBottom: "20px",
-};
+const styles = {
+  page: (mobile) => ({
+    padding: mobile ? "10px" : "20px",
+    fontFamily: "Segoe UI",
+  }),
 
-const input = {
-  padding: "8px",
-  borderRadius: "6px",
-  border: "1px solid #ccc",
-};
+  heading: (mobile) => ({
+    fontSize: mobile ? "22px" : "28px",
+    marginBottom: "20px",
+  }),
 
-const downloadBtn = {
-  background: "#16a34a",
-  color: "#fff",
-  border: "none",
-  padding: "8px 14px",
-  borderRadius: "6px",
-  cursor: "pointer",
-};
+  filterBox: (mobile) => ({
+    display: "flex",
+    flexDirection: mobile ? "column" : "row",
+    gap: "10px",
+    marginBottom: "20px",
+  }),
 
-const facultyCard = {
-  background: "#f8fafc",
-  padding: "20px",
-  marginBottom: "20px",
-  borderRadius: "10px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-};
+  input: (mobile) => ({
+    padding: "8px",
+    borderRadius: "6px",
+    border: "1px solid #ccc",
+    width: mobile ? "100%" : "auto",
+  }),
 
-const campusBox = {
-  marginTop: "15px",
-  padding: "10px",
-  background: "#eef2ff",
-  borderRadius: "8px",
-};
+  downloadBtn: (mobile) => ({
+    background: "#16a34a",
+    color: "#fff",
+    border: "none",
+    padding: "8px 14px",
+    borderRadius: "6px",
+    cursor: "pointer",
+    width: mobile ? "100%" : "auto",
+  }),
 
-const table = {
-  width: "100%",
-  borderCollapse: "collapse",
-  marginTop: "8px",
-};
+  facultyCard: (mobile) => ({
+    background: "#f8fafc",
+    padding: mobile ? "15px" : "20px",
+    marginBottom: "20px",
+    borderRadius: "10px",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+  }),
 
-const th = {
-  padding: "8px",
-  textAlign: "left",
-};
+  campusBox: {
+    marginTop: "15px",
+    padding: "10px",
+    background: "#eef2ff",
+    borderRadius: "8px",
+  },
 
-const td = {
-  padding: "8px",
-  borderBottom: "1px solid #e5e7eb",
+  tableWrapper: {
+    overflowX: "auto",
+  },
+
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+    marginTop: "8px",
+    minWidth: "500px",
+  },
+
+  tableHeader: {
+    background: "#0ea5e9",
+    color: "#fff",
+  },
+
+  th: {
+    padding: "8px",
+    textAlign: "left",
+  },
+
+  td: {
+    padding: "8px",
+    borderBottom: "1px solid #e5e7eb",
+  },
 };
 
 export default DashboardHome;
