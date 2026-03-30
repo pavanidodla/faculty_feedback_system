@@ -17,7 +17,7 @@ export default function Login() {
       const res = await API.post("/auth/login", {
         email,
         password,
-        role: isAdminForm ? "admin" : "user",
+        role: isAdminForm ? "admin" : "student",
       });
 
       const { token, role, name, email: userEmail, studentId } = res.data;
@@ -64,6 +64,7 @@ export default function Login() {
     try {
       const res = await API.post("/auth/google", {
         token: credentialResponse.credential,
+        role: isAdminForm ? "admin" : "student",
       });
 
       const { token, role, name, email: userEmail, studentId } = res.data;
