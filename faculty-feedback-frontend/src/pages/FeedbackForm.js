@@ -21,13 +21,14 @@ const FacultyFeedbackPage = () => {
   const [submittedIds, setSubmittedIds] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Load submitted IDs from localStorage
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("");
+
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem("submittedIds")) || [];
     setSubmittedIds(stored);
   }, []);
 
-  // Fetch subjects from backend
   useEffect(() => {
     const fetchSubjects = async () => {
       if (!year || !semester) return;
@@ -35,13 +36,16 @@ const FacultyFeedbackPage = () => {
 
       setLoading(true);
       try {
-        const res = await axios.get("http://localhost:5000/api/academic", {
-          params: {
-            year,
-            semester,
-            branch: engineeringYears.includes(year) ? branch : "common"
+        const res = await axios.get(
+          "https://faculty-feedback-backend-grqs.onrender.com/api/academic",
+          {
+            params: {
+              year,
+              semester,
+              branch: engineeringYears.includes(year) ? branch : "common"
+            }
           }
-        });
+        );
 
         const generated = res.data.map(item => ({
           subject: item.subject,
@@ -53,8 +57,8 @@ const FacultyFeedbackPage = () => {
 
         setFeedbacks(generated);
       } catch (err) {
-        console.log(err);
-        alert("Failed loading subjects ❌");
+        setMessage("Failed to load subjects");
+        setMessageType("error");
       }
       setLoading(false);
     };
@@ -94,41 +98,48 @@ const FacultyFeedbackPage = () => {
     e.preventDefault();
 
     if (!studentId || !year || !semester || !campus) {
-      alert("Fill all fields");
+      setMessage("Please fill all required fields");
+      setMessageType("error");
       return;
     }
 
     if (engineeringYears.includes(year) && !branch) {
-      alert("Select branch");
+      setMessage("Please select branch");
+      setMessageType("error");
       return;
     }
 
     if (submittedIds.includes(studentId)) {
-      alert("Feedback already submitted");
+      setMessage("Feedback already submitted");
+      setMessageType("error");
       return;
     }
 
     if (!validateRatings()) {
-      alert("Please complete all ratings");
+      setMessage("Please complete all ratings");
+      setMessageType("error");
       return;
     }
 
     try {
-      await axios.post("http://localhost:5000/api/feedback", {
-        studentId,
-        year,
-        semester,
-        branch,
-        campus,
-        feedbacks
-      });
+      await axios.post(
+        "https://faculty-feedback-backend-grqs.onrender.com/api/feedback",
+        {
+          studentId,
+          year,
+          semester,
+          branch,
+          campus,
+          feedbacks
+        }
+      );
 
-      alert("Feedback Submitted Successfully ✅");
+      setMessage("Feedback submitted successfully!");
+      setMessageType("success");
 
       const updatedIds = [...submittedIds, studentId];
       localStorage.setItem("submittedIds", JSON.stringify(updatedIds));
 
-      // Reset form
       setStudentId("");
       setYear("");
       setSemester("");
@@ -136,9 +147,11 @@ const FacultyFeedbackPage = () => {
       setCampus("");
       setFeedbacks([]);
 
+      setTimeout(() => setMessage(""), 3000);
+
     } catch (err) {
-      console.log(err);
-      alert("Submission error ❌");
+      setMessage("Submission failed. Please try again.");
+      setMessageType("error");
     }
   };
 
@@ -146,6 +159,12 @@ const FacultyFeedbackPage = () => {
     <div className="page">
       <div className="container">
         <h1 className="title">Faculty Feedback System 🎓</h1>
+
+        {message && (
+          <div className={`message ${messageType}`}>
+            {message}
+          </div>
+        )}
 
         <div className="topInputs">
           <input
@@ -218,12 +237,13 @@ const FacultyFeedbackPage = () => {
             <div className="card" key={index}>
               <h2 className="subjectTitle">{fb.subject}</h2>
 
-              {/* Faculty Selection */}
-              {fb.facultyList && fb.facultyList.length > 0 ? (
+              {fb.facultyList.length > 0 ? (
                 <select
                   className="input"
                   value={fb.faculty}
-                  onChange={(e) => handleFacultySelect(index, e.target.value)}
+                  onChange={(e) =>
+                    handleFacultySelect(index, e.target.value)
+                  }
                 >
                   <option value="">Select Faculty</option>
                   {fb.facultyList.map((f, i) => (
@@ -235,7 +255,9 @@ const FacultyFeedbackPage = () => {
                   className="input"
                   placeholder="Enter Faculty Name"
                   value={fb.faculty}
-                  onChange={(e) => handleFacultySelect(index, e.target.value)}
+                  onChange={(e) =>
+                    handleFacultySelect(index, e.target.value)
+                  }
                 />
               )}
 
@@ -247,8 +269,14 @@ const FacultyFeedbackPage = () => {
                     {[1, 2, 3, 4, 5].map(star => (
                       <span
                         key={star}
-                        className={star <= fb.ratings[qIndex] ? "star active" : "star"}
-                        onClick={() => handleRatingChange(index, qIndex, star)}
+                        className={
+                          star <= fb.ratings[qIndex]
+                            ? "star active"
+                            : "star"
+                        }
+                        onClick={() =>
+                          handleRatingChange(index, qIndex, star)
+                        }
                       >
                         ★
                       </span>
@@ -259,7 +287,9 @@ const FacultyFeedbackPage = () => {
                     className="textarea"
                     placeholder="Write comments..."
                     value={fb.comments[qIndex]}
-                    onChange={(e) => handleCommentChange(index, qIndex, e.target.value)}
+                    onChange={(e) =>
+                      handleCommentChange(index, qIndex, e.target.value)
+                    }
                   />
                 </div>
               ))}
@@ -273,20 +303,114 @@ const FacultyFeedbackPage = () => {
       </div>
 
       <style>{`
-        .page{ min-height:100vh; background: linear-gradient(135deg,#e3f2fd,#f3e5f5); }
-        .container{ max-width:1100px; margin:auto; padding:30px; }
-        .title{ text-align:center; margin-bottom:30px; color:#1a237e; }
-        .topInputs{ display:flex; gap:15px; flex-wrap:wrap; justify-content:center; margin-bottom:30px; }
-        .input{ padding:12px; border-radius:12px; border:none; width:220px; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
-        .card{ background:white; padding:25px; border-radius:18px; margin-bottom:25px; box-shadow:0 10px 25px rgba(0,0,0,0.08); }
-        .subjectTitle{ color:#283593; }
-        .stars{ font-size:24px; cursor:pointer; }
-        .star{ color:#ccc; transition:0.3s; }
-        .star:hover{ transform:scale(1.2); }
-        .active{ color:gold; }
-        .textarea{ width:100%; height:60px; margin-top:10px; border-radius:10px; padding:10px; }
-        .submitBtn{ margin-top:20px; width:100%; padding:15px; border:none; border-radius:12px; background:#4caf50; color:white; font-size:18px; cursor:pointer; }
-        .loading{ text-align:center; }
+        .page{
+          min-height:100vh;
+          background: linear-gradient(135deg,#e3f2fd,#f3e5f5);
+        }
+
+        .container{
+          max-width:1100px;
+          margin:auto;
+          padding:20px;
+        }
+
+        .title{
+          text-align:center;
+          margin-bottom:20px;
+          color:#1a237e;
+        }
+
+        .message{
+          text-align:center;
+          padding:12px;
+          margin-bottom:20px;
+          border-radius:10px;
+          font-weight:bold;
+        }
+
+        .message.success{
+          background:#e8f5e9;
+          color:#2e7d32;
+        }
+
+        .message.error{
+          background:#ffebee;
+          color:#c62828;
+        }
+
+        .topInputs{
+          display:flex;
+          gap:15px;
+          flex-wrap:wrap;
+          justify-content:center;
+          margin-bottom:20px;
+        }
+
+        .input{
+          padding:12px;
+          border-radius:12px;
+          border:none;
+          width:200px;
+          box-shadow:0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .card{
+          background:white;
+          padding:20px;
+          border-radius:18px;
+          margin-bottom:20px;
+          box-shadow:0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .subjectTitle{
+          color:#283593;
+        }
+
+        .stars{
+          font-size:24px;
+          cursor:pointer;
+        }
+
+        .star{
+          color:#ccc;
+          transition:0.3s;
+        }
+
+        .active{
+          color:gold;
+        }
+
+        .textarea{
+          width:100%;
+          height:70px;
+          margin-top:10px;
+          border-radius:10px;
+          padding:10px;
+        }
+
+        .submitBtn{
+          margin-top:20px;
+          width:100%;
+          padding:15px;
+          border:none;
+          border-radius:12px;
+          background:#4caf50;
+          color:white;
+          font-size:18px;
+          cursor:pointer;
+        }
+
+        @media (max-width:768px){
+          .topInputs{
+            flex-direction:column;
+            align-items:center;
+          }
+
+          .input{
+            width:100%;
+            max-width:350px;
+          }
+        }
       `}</style>
     </div>
   );
