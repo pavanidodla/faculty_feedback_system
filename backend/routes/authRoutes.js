@@ -7,18 +7,6 @@ import User from "../models/User.js";
 const router = express.Router();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-/* ================= EMAIL DOMAIN CHECK FUNCTION ================= */
-function isValidRguktEmail(email) {
-  const allowedDomains = [
-    "@rguktrkv.ac.in",
-    "@rguktong.ac.in"
-  ];
-
-  return allowedDomains.some(domain =>
-    email.endsWith(domain)
-  );
-}
-
 /* ================= REGISTER ================= */
 router.post("/register", async (req, res) => {
   try {
@@ -26,10 +14,9 @@ router.post("/register", async (req, res) => {
     const email = req.body.email.toLowerCase();
     const password = req.body.password;
 
-    /* DOMAIN VALIDATION */
-    if (!isValidRguktEmail(email)) {
+    if (!email.endsWith("@rguktrkv.ac.in")) {
       return res.status(403).json({
-        message: "Use your RGUKT college email"
+        message: "Students must use RGUKT email"
       });
     }
 
@@ -41,12 +28,11 @@ router.post("/register", async (req, res) => {
     }
 
     const studentId = email.split("@")[0].toUpperCase();
-    const hashedPassword = await bcrypt.hash(password, 10);
 
     await User.create({
       name,
       email,
-      password: hashedPassword,
+      password,
       studentId,
       role: "student"
     });
@@ -57,6 +43,13 @@ router.post("/register", async (req, res) => {
 
   } catch (err) {
     console.error("REGISTER ERROR:", err);
+
+    if (err.code === 11000) {
+      return res.status(400).json({
+        message: "Email already registered"
+      });
+    }
+
     res.status(500).json({
       message: "Server error"
     });
@@ -68,14 +61,11 @@ router.post("/login", async (req, res) => {
   try {
     const email = req.body.email.toLowerCase();
     const password = req.body.password;
-    const requestedRole = req.body.role; // student/admin
 
     const user = await User.findOne({ email });
-
     if (!user)
       return res.status(400).json({ message: "Invalid credentials" });
 
-    /* BLOCK PASSWORD LOGIN FOR GOOGLE USERS */
     if (!user.password)
       return res.status(400).json({
         message: "Use Google login for this account"
@@ -84,16 +74,6 @@ router.post("/login", async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match)
       return res.status(400).json({ message: "Invalid credentials" });
-
-    /* ROLE VALIDATION */
-    if (user.role !== requestedRole) {
-      return res.status(403).json({
-        message:
-          user.role === "admin"
-            ? "Admins must login using Admin Login"
-            : "Students must login using Student Login"
-      });
-    }
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -118,11 +98,11 @@ router.post("/login", async (req, res) => {
 /* ================= GOOGLE LOGIN ================= */
 router.post("/google", async (req, res) => {
   try {
-    const { token, role: requestedRole } = req.body;
+    const { token } = req.body;
 
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID
+      audience: process.env.GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
@@ -130,33 +110,19 @@ router.post("/google", async (req, res) => {
     const name = payload.name;
     const googleId = payload.sub;
 
-    /* DOMAIN VALIDATION */
-    if (!isValidRguktEmail(email)) {
+    if (!email.endsWith("@rguktrkv.ac.in")) {
       return res.status(403).json({
-        message: "Use your RGUKT Google account"
+        message: "Use college Google account"
       });
     }
 
-    /* ADMIN EMAIL LIST */
     const adminEmails = [
       "hod@rguktrkv.ac.in",
       "dean@rguktrkv.ac.in",
       "admin@rguktrkv.ac.in"
     ];
 
-    const actualRole = adminEmails.includes(email)
-      ? "admin"
-      : "student";
-
-    /* BLOCK WRONG PORTAL LOGIN */
-    if (actualRole !== requestedRole) {
-      return res.status(403).json({
-        message:
-          actualRole === "admin"
-            ? "Admins must login using Admin Login"
-            : "Students must login using Student Login"
-      });
-    }
+    const role = adminEmails.includes(email) ? "admin" : "student";
 
     let user = await User.findOne({ email });
 
@@ -168,11 +134,11 @@ router.post("/google", async (req, res) => {
         email,
         googleId,
         studentId,
-        role: actualRole
+        role
       });
     } else {
       user.googleId = googleId;
-      user.role = actualRole;
+      user.role = role;
       await user.save();
     }
 
@@ -192,9 +158,8 @@ router.post("/google", async (req, res) => {
 
   } catch (error) {
     console.error("GOOGLE LOGIN ERROR:", error);
-    res.status(500).json({
-      message: "Google login failed"
-    });
+    res.status(500).json({ message: "Google login failed" });
   }
 });
+
 export default router;
