@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: "https://faculty-feedback-backend-grqs.onrender.com/api", // deployed backend
 });
 
 API.interceptors.request.use((req) => {
