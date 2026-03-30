@@ -1,8 +1,10 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -20,22 +22,45 @@ export default function AdminLayout() {
   return (
     <div style={{ display: "flex" }}>
       
-      {/* FIXED SIDEBAR */}
+      {/* MOBILE TOGGLE BUTTON */}
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        style={{
+          position: "fixed",
+          top: "15px",
+          left: "15px",
+          zIndex: 1000,
+          background: "#1e293b",
+          color: "white",
+          border: "none",
+          padding: "8px 12px",
+          borderRadius: "6px",
+          cursor: "pointer"
+        }}
+        className="menu-btn"
+      >
+        ☰
+      </button>
+
+      {/* SIDEBAR */}
       <div
         style={{
           width: "230px",
           height: "100vh",
           background: "#1e293b",
           padding: "20px",
-          position: "fixed",   // 🔥 makes sidebar fixed
-          left: 0,
+          position: "fixed",
+          left: sidebarOpen ? "0" : "-240px",
           top: 0,
           display: "flex",
           flexDirection: "column",
-          justifyContent: "space-between"
+          justifyContent: "space-between",
+          transition: "0.3s",
+          zIndex: 999
         }}
+        className="sidebar"
       >
-        {/* Top Menu */}
+        {/* MENU */}
         <div>
           <h2 style={{ color: "white", marginBottom: "30px" }}>
             Admin Panel
@@ -55,6 +80,7 @@ export default function AdminLayout() {
                       ? "/admin-dashboard"
                       : `/admin-dashboard/${item.path}`
                   }
+                  onClick={() => setSidebarOpen(false)}
                   style={{
                     display: "block",
                     padding: "10px",
@@ -72,8 +98,8 @@ export default function AdminLayout() {
           })}
         </div>
 
-        {/* Logout Button (Slightly Above Bottom) */}
-        <div style={{ marginBottom: "30px" }}>
+        {/* LOGOUT */}
+        <div style={{ marginBottom: "20px" }}>
           <button
             onClick={handleLogout}
             style={{
@@ -91,18 +117,36 @@ export default function AdminLayout() {
         </div>
       </div>
 
-      {/* PAGE CONTENT (shifted right because sidebar is fixed) */}
+      {/* CONTENT */}
       <div
         style={{
-          marginLeft: "260px",  // 🔥 important to avoid overlap
           flex: 1,
           padding: "30px",
           background: "#f1f5f9",
-          minHeight: "100vh"
+          minHeight: "100vh",
+          marginLeft: "0"
         }}
+        className="content"
       >
         <Outlet />
       </div>
+
+      {/* RESPONSIVE CSS */}
+      <style>{`
+        @media (min-width: 768px) {
+          .sidebar {
+            left: 0 !important;
+          }
+
+          .content {
+            margin-left: 230px;
+          }
+
+          .menu-btn {
+            display: none;
+          }
+        }
+      `}</style>
     </div>
   );
 }
