@@ -1,92 +1,122 @@
-import React from "react";
+import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 
 const Sidebar = () => {
+  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/"); // redirect to login
+    navigate("/");
   };
 
   return (
-    <div style={sidebarStyle}>
-      <h2 style={{ marginBottom: "20px" }}>Admin Panel</h2>
+    <>
+      {/* Toggle Button */}
+      <button className="menuBtn" onClick={() => setOpen(!open)}>
+        ☰
+      </button>
 
-      <ul style={menuStyle}>
-        <li>
-          <NavLink to="/" end style={navLinkStyle}>
-            Dashboard
-          </NavLink>
-        </li>
+      {/* Sidebar */}
+      <div className={`sidebar ${open ? "open" : ""}`}>
+        <h2 className="title">Admin Panel</h2>
 
-        <li>
-          <NavLink to="/subjects" style={navLinkStyle}>
-            Manage Subjects
-          </NavLink>
-        </li>
+        <NavLink to="/" end className="link" onClick={() => setOpen(false)}>
+          Dashboard
+        </NavLink>
 
-        <li>
-          <NavLink to="/feedback" style={navLinkStyle}>
-            View Feedback
-          </NavLink>
-        </li>
+        <NavLink to="/subjects" className="link" onClick={() => setOpen(false)}>
+          Manage Subjects
+        </NavLink>
 
-        <li>
-          <NavLink to="/export" style={navLinkStyle}>
-            Export Data
-          </NavLink>
-        </li>
+        <NavLink to="/feedback" className="link" onClick={() => setOpen(false)}>
+          View Feedback
+        </NavLink>
 
-        {/* Logout Button */}
-        <li>
-          <button onClick={handleLogout} style={logoutBtn}>
-            Logout
-          </button>
-        </li>
-      </ul>
-    </div>
+        <NavLink to="/export" className="link" onClick={() => setOpen(false)}>
+          Export Data
+        </NavLink>
+
+        <button className="logout" onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
+
+      <style>{`
+        .menuBtn{
+          position:fixed;
+          top:12px;
+          left:12px;
+          background:#1e293b;
+          color:white;
+          border:none;
+          padding:8px 12px;
+          border-radius:6px;
+          cursor:pointer;
+          z-index:1000;
+        }
+
+        .sidebar{
+          position:fixed;
+          top:0;
+          left:-240px;
+          width:220px;
+          height:100vh;
+          background:#1e293b;
+          color:white;
+          padding:20px;
+          transition:0.3s;
+          z-index:999;
+        }
+
+        .sidebar.open{
+          left:0;
+        }
+
+        .title{
+          margin-bottom:20px;
+        }
+
+        .link{
+          display:block;
+          color:white;
+          text-decoration:none;
+          padding:10px;
+          margin-bottom:10px;
+          border-radius:6px;
+        }
+
+        .link.active{
+          background:#38bdf8;
+          color:#1e293b;
+          font-weight:bold;
+        }
+
+        .logout{
+          width:100%;
+          padding:10px;
+          background:#dc2626;
+          color:white;
+          border:none;
+          border-radius:6px;
+          margin-top:10px;
+          cursor:pointer;
+        }
+
+        /* Desktop: Sidebar always visible */
+        @media(min-width: 768px){
+          .sidebar{
+            left:0;
+          }
+
+          .menuBtn{
+            display:none;
+          }
+        }
+      `}</style>
+    </>
   );
-};
-
-/* Styles */
-
-const sidebarStyle = {
-  width: "220px",
-  backgroundColor: "#1e293b",
-  color: "white",
-  height: "100vh",
-  padding: "20px",
-};
-
-const menuStyle = {
-  listStyle: "none",
-  padding: 0,
-  margin: 0,
-};
-
-const navLinkStyle = ({ isActive }) => ({
-  display: "block",
-  padding: "10px",
-  marginBottom: "10px",
-  textDecoration: "none",
-  color: isActive ? "#1e293b" : "white",
-  backgroundColor: isActive ? "#38bdf8" : "transparent",
-  borderRadius: "6px",
-  fontWeight: isActive ? "bold" : "normal",
-  transition: "0.3s",
-});
-
-const logoutBtn = {
-  width: "100%",
-  padding: "10px",
-  backgroundColor: "#dc2626",
-  color: "white",
-  border: "none",
-  borderRadius: "6px",
-  cursor: "pointer",
-  marginTop: "10px",
 };
 
 export default Sidebar;
