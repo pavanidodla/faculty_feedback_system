@@ -14,15 +14,24 @@ export default function Login() {
   /* ================= LOGIN ================= */
   const handleLogin = async () => {
     try {
+      const trimmedEmail = email.toLowerCase().trim();
+      const trimmedPassword = password.trim();
+
+      console.log("Login payload:", {
+        email: trimmedEmail,
+        password: trimmedPassword,
+        role: isAdminForm ? "admin" : "student",
+      });
+
       const res = await API.post("/api/auth/login", {
-        email,
-        password,
+        email: trimmedEmail,
+        password: trimmedPassword,
         role: isAdminForm ? "admin" : "student",
       });
 
       const { token, role, name, email: userEmail, studentId } = res.data;
 
-      /* 🚫 BLOCK ADMIN FROM USER LOGIN */
+      // Block wrong portal
       if (!isAdminForm && role === "admin") {
         setError("Admins must login using Admin Login");
         setEmail("");
@@ -30,7 +39,6 @@ export default function Login() {
         return;
       }
 
-      /* 🚫 BLOCK USER FROM ADMIN LOGIN */
       if (isAdminForm && role !== "admin") {
         setError("Only admins can login here");
         setEmail("");
@@ -38,21 +46,20 @@ export default function Login() {
         return;
       }
 
-      /* SAVE SESSION */
+      // Save session
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
       localStorage.setItem("name", name);
       localStorage.setItem("email", userEmail);
       localStorage.setItem("studentId", studentId);
 
-      /* CLEAR FIELDS */
       setEmail("");
       setPassword("");
       setError("");
 
       navigate(role === "admin" ? "/admin-dashboard" : "/dashboard");
-
     } catch (err) {
+      console.error("Login error:", err.response?.data || err);
       setError(err.response?.data?.message || "Invalid credentials");
       setEmail("");
       setPassword("");
@@ -62,6 +69,11 @@ export default function Login() {
   /* ================= GOOGLE LOGIN ================= */
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
+      if (!credentialResponse?.credential) {
+        setError("Google login failed: no credential returned");
+        return;
+      }
+
       const res = await API.post("/api/auth/google", {
         token: credentialResponse.credential,
         role: isAdminForm ? "admin" : "student",
@@ -90,8 +102,8 @@ export default function Login() {
       setError("");
 
       navigate(role === "admin" ? "/admin-dashboard" : "/dashboard");
-
-    } catch {
+    } catch (err) {
+      console.error("Google login error:", err.response?.data || err);
       setError("Google login failed");
     }
   };
@@ -99,7 +111,6 @@ export default function Login() {
   return (
     <div style={styles.wrapper}>
       <div style={styles.container}>
-
         {/* LEFT IMAGE */}
         <div style={styles.left}>
           <img src="college.jpg" alt="Login" style={styles.image} />
@@ -169,7 +180,6 @@ export default function Login() {
             )}
           </div>
         </div>
-
       </div>
     </div>
   );
@@ -185,10 +195,9 @@ const styles = {
     background: "#f4f6f8",
     padding: "10px",
   },
-
   container: {
     display: "flex",
-    flexDirection: "row",      // 👈 always side-by-side
+    flexDirection: "row",
     width: "100%",
     maxWidth: "850px",
     minHeight: "400px",
@@ -196,49 +205,40 @@ const styles = {
     borderRadius: "12px",
     overflow: "hidden",
   },
-
-  /* image section */
   left: {
     flex: 1,
-    minWidth: "40%",           // keeps image visible on mobile
+    minWidth: "40%",
     background: "#e0e0e0",
   },
-
   image: {
     width: "100%",
     height: "100%",
     objectFit: "cover",
   },
-
-  /* form section */
   right: {
     flex: 1,
-    minWidth: "60%",           // ensures form has enough space
+    minWidth: "60%",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     background: "#fff",
     padding: "15px",
   },
-
   card: {
     width: "100%",
     maxWidth: "300px",
     textAlign: "center",
   },
-
   title: {
     marginBottom: "12px",
     fontSize: "20px",
     fontWeight: "bold",
   },
-
   error: {
     color: "red",
     fontSize: "13px",
     marginBottom: "5px",
   },
-
   input: {
     width: "100%",
     padding: "8px",
@@ -247,7 +247,6 @@ const styles = {
     border: "1px solid #ccc",
     fontSize: "14px",
   },
-
   loginBtn: {
     width: "100%",
     padding: "8px",
@@ -259,23 +258,19 @@ const styles = {
     cursor: "pointer",
     fontSize: "14px",
   },
-
   switchText: {
     marginTop: "10px",
     fontSize: "12px",
   },
-
   switchLink: {
     color: "#1e88e5",
     cursor: "pointer",
     fontWeight: "bold",
   },
-
   registerText: {
     marginTop: "6px",
     fontSize: "12px",
   },
-
   registerLink: {
     color: "#1e88e5",
     cursor: "pointer",
