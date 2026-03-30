@@ -23,7 +23,7 @@ const ExportFeedback = () => {
       }
 
       const url =
-        `http://localhost:5000/api/feedback/export?campus=${campus}&year=${year}&branch=${branch || "all"}`;
+        `https://faculty-feedback-backend-grqs.onrender.com/api/feedback/export?campus=${campus}&year=${year}&branch=${branch || "all"}`;
 
       const link = document.createElement("a");
       link.href = url;
@@ -44,7 +44,9 @@ const ExportFeedback = () => {
   return (
     <>
       <style>{`
+
         body{
+          margin:0;
           background: linear-gradient(135deg,#e3f2fd,#fce4ec);
           font-family:Segoe UI;
         }
@@ -95,6 +97,52 @@ const ExportFeedback = () => {
         h2{
           margin-bottom:25px;
         }
+
+        /* ================= MOBILE RESPONSIVE ================= */
+
+        @media(max-width: 768px){
+
+          .container{
+            padding:20px;
+          }
+
+          .card{
+            padding:25px;
+            border-radius:18px;
+          }
+
+          h2{
+            font-size:20px;
+          }
+
+          select{
+            padding:12px;
+            font-size:14px;
+          }
+
+          .btn{
+            padding:13px;
+            font-size:15px;
+          }
+
+        }
+
+        @media(max-width: 480px){
+
+          .container{
+            padding:10px;
+          }
+
+          .card{
+            padding:18px;
+          }
+
+          h2{
+            font-size:18px;
+          }
+
+        }
+
       `}</style>
 
       <div className="container">
@@ -134,7 +182,7 @@ const ExportFeedback = () => {
             <option>E4</option>
           </select>
 
-          {/* Branch (only for engineering years) */}
+          {/* Branch */}
           {engineeringYears.includes(year) &&
             <select
               value={branch}
