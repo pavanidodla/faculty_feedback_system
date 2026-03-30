@@ -11,7 +11,7 @@ export default function ViewFeedback() {
   const loadFeedbacks = useCallback(async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/api/feedback"
+        "https://faculty-feedback-backend-grqs.onrender.com/api/feedback"
       );
 
       let data = res.data || [];
