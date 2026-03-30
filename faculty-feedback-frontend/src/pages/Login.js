@@ -5,106 +5,53 @@ import API from "../api";
 
 export default function Login() {
   const navigate = useNavigate();
-
-  const [isAdminForm, setIsAdminForm] = useState(false);
+  const [isAdminForm, setIsAdminForm] = useState(false); // toggle between user/admin
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
 
-  /* ================= LOGIN ================= */
+  /* ================= NORMAL / ADMIN LOGIN ================= */
   const handleLogin = async () => {
     try {
-      const trimmedEmail = email.toLowerCase().trim();
-      const trimmedPassword = password.trim();
-
-      console.log("Login payload:", {
-        email: trimmedEmail,
-        password: trimmedPassword,
-        role: isAdminForm ? "admin" : "student",
+      const res = await API.post("/auth/login", {
+        email,
+        password,
+        role: isAdminForm ? "admin" : "user",
       });
+      const { token, role, name, email: userEmail,studentId } = res.data;
 
-      const res = await API.post("/api/auth/login", {
-        email: trimmedEmail,
-        password: trimmedPassword,
-        role: isAdminForm ? "admin" : "student",
-      });
-
-      const { token, role, name, email: userEmail, studentId } = res.data;
-
-      // Block wrong portal
-      if (!isAdminForm && role === "admin") {
-        setError("Admins must login using Admin Login");
-        setEmail("");
-        setPassword("");
-        return;
-      }
-
-      if (isAdminForm && role !== "admin") {
-        setError("Only admins can login here");
-        setEmail("");
-        setPassword("");
-        return;
-      }
-
-      // Save session
+      // store in localStorage for dashboard
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
       localStorage.setItem("name", name);
       localStorage.setItem("email", userEmail);
-      localStorage.setItem("studentId", studentId);
+      localStorage.setItem("studentId",studentId);
 
-      setEmail("");
-      setPassword("");
-      setError("");
-
-      navigate(role === "admin" ? "/admin-dashboard" : "/dashboard");
+      if (role === "admin") navigate("/admin-dashboard");
+      else navigate("/dashboard");
     } catch (err) {
-      console.error("Login error:", err.response?.data || err);
-      setError(err.response?.data?.message || "Invalid credentials");
-      setEmail("");
-      setPassword("");
+      alert(err.response?.data?.message || "Invalid credentials or role");
     }
   };
 
   /* ================= GOOGLE LOGIN ================= */
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      if (!credentialResponse?.credential) {
-        setError("Google login failed: no credential returned");
-        return;
-      }
-
-      const res = await API.post("/api/auth/google", {
+      const res = await API.post("/auth/google", {
         token: credentialResponse.credential,
-        role: isAdminForm ? "admin" : "student",
       });
+      const { token, role, name, email: userEmail,studentId } = res.data;
 
-      const { token, role, name, email: userEmail, studentId } = res.data;
-
-      if (!isAdminForm && role === "admin") {
-        setError("Admins must login using Admin Login");
-        return;
-      }
-
-      if (isAdminForm && role !== "admin") {
-        setError("Only admins can login here");
-        return;
-      }
-
+      // store in localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
       localStorage.setItem("name", name);
       localStorage.setItem("email", userEmail);
-      localStorage.setItem("studentId", studentId);
+      localStorage.setItem("studentId",studentId);
 
-      setEmail("");
-      setPassword("");
-      setError("");
-
-      navigate(role === "admin" ? "/admin-dashboard" : "/dashboard");
-    } catch (err) {
-      console.error("Google login error:", err.response?.data || err);
-      setError("Google login failed");
+      if (role === "admin") navigate("/admin-dashboard");
+      else navigate("/dashboard");
+    } catch {
+      alert("Google login failed");
     }
   };
 
@@ -113,26 +60,30 @@ export default function Login() {
       <div style={styles.container}>
         {/* LEFT IMAGE */}
         <div style={styles.left}>
-          <img src="college.jpg" alt="Login" style={styles.image} />
+          <img
+            src="college.jpg"
+            alt="Login"
+            style={styles.image}
+          />
         </div>
 
-        {/* RIGHT FORM */}
+        {/* RIGHT LOGIN */}
         <div style={styles.right}>
           <div style={styles.card}>
             <h2 style={styles.title}>
               {isAdminForm ? "Admin Login" : "User Login"}
             </h2>
 
-            {error && <p style={styles.error}>{error}</p>}
-
+            {/* EMAIL */}
             <input
               type="email"
-              placeholder={isAdminForm ? "Admin Email" : "College Email"}
+              placeholder="College Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               style={styles.input}
             />
 
+            {/* PASSWORD */}
             <input
               type="password"
               placeholder="Password"
@@ -141,17 +92,20 @@ export default function Login() {
               style={styles.input}
             />
 
+            {/* LOGIN BUTTON */}
             <button onClick={handleLogin} style={styles.loginBtn}>
               Login
             </button>
 
+            {/* GOOGLE LOGIN */}
             <div style={{ marginTop: 15 }}>
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
-                onError={() => setError("Google Sign-in failed")}
+                onError={() => alert("Google Sign-in failed")}
               />
             </div>
 
+            {/* SWITCH FORMS */}
             <p style={styles.switchText}>
               {isAdminForm ? "Back to " : "Are you an admin? "}
               <span
@@ -159,7 +113,6 @@ export default function Login() {
                   setIsAdminForm(!isAdminForm);
                   setEmail("");
                   setPassword("");
-                  setError("");
                 }}
                 style={styles.switchLink}
               >
@@ -167,6 +120,7 @@ export default function Login() {
               </span>
             </p>
 
+            {/* REGISTER LINK (only for user login) */}
             {!isAdminForm && (
               <p style={styles.registerText}>
                 Don’t have an account?{" "}
@@ -191,76 +145,68 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    minHeight: "100vh",
+    height: "100vh",
     background: "#f4f6f8",
-    padding: "10px",
+    padding: "20px",
   },
   container: {
     display: "flex",
-    flexDirection: "row",
-    width: "100%",
-    maxWidth: "850px",
-    minHeight: "400px",
+    width: "700px",
+    height: "450px",
     boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
     borderRadius: "12px",
     overflow: "hidden",
   },
   left: {
     flex: 1,
-    minWidth: "40%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
     background: "#e0e0e0",
+    padding: "15px",
   },
   image: {
     width: "100%",
     height: "100%",
     objectFit: "cover",
+    borderRadius: "12px",
   },
   right: {
     flex: 1,
-    minWidth: "60%",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    background: "#fff",
-    padding: "15px",
+    background: "#ffffff",
+    padding: "20px",
   },
   card: {
     width: "100%",
-    maxWidth: "300px",
+    display: "flex",
+    flexDirection: "column",
     textAlign: "center",
+    padding: "20px",
   },
-  title: {
-    marginBottom: "12px",
-    fontSize: "20px",
-    fontWeight: "bold",
-  },
-  error: {
-    color: "red",
-    fontSize: "13px",
-    marginBottom: "5px",
-  },
+  title: { marginBottom: "15px", fontSize: "22px", fontWeight: "bold" },
   input: {
-    width: "100%",
-    padding: "8px",
-    margin: "6px 0",
+    width: "93%",
+    padding: "10px",
+    margin: "8px 0",
     borderRadius: "5px",
     border: "1px solid #ccc",
-    fontSize: "14px",
   },
   loginBtn: {
     width: "100%",
-    padding: "8px",
-    marginTop: "8px",
+    padding: "10px",
+    marginTop: "10px",
     background: "#1e88e5",
     color: "white",
     border: "none",
     borderRadius: "5px",
     cursor: "pointer",
-    fontSize: "14px",
   },
   switchText: {
-    marginTop: "10px",
-    fontSize: "12px",
+    marginTop: "12px",
+    fontSize: "14px",
   },
   switchLink: {
     color: "#1e88e5",
@@ -268,8 +214,8 @@ const styles = {
     fontWeight: "bold",
   },
   registerText: {
-    marginTop: "6px",
-    fontSize: "12px",
+    marginTop: "8px",
+    fontSize: "14px",
   },
   registerLink: {
     color: "#1e88e5",
