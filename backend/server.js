@@ -8,6 +8,7 @@ import feedbackRoutes from "./routes/feedbackRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import rankingRoutes from "./routes/rankingRoutes.js";
 import academicRoutes from "./routes/academicRoutes.js";
+import emailRoutes from "./routes/emailRoutes.js";
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use("/api/feedback", feedbackRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/ranking", rankingRoutes);
 app.use("/api/academic", academicRoutes);
+app.use("/api/admin", emailRoutes);
 
 /* ================= MongoDB ================= */
 const startServer = async () => {
