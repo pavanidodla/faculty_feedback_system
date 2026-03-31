@@ -201,10 +201,17 @@ const ManageSubjects = () => {
         }
 
         .container{
-          max-width:900px;
-          margin:auto;
-          padding:40px;
-        }
+  max-width:900px;
+  margin:auto;
+  padding:40px;
+}
+
+/* Shift content for sidebar in desktop */
+@media(min-width: 768px){
+  .container{
+    margin-left:240px;
+  }
+}
 
         .title{
           text-align:center;
