@@ -15,7 +15,7 @@ export default function Login() {
       const res = await API.post("/api/auth/login", {
         email,
         password,
-        role: isAdminForm ? "admin" : "user",
+        role: isAdminForm ? "admin" : "student",
       });
       const { token, role, name, email: userEmail,studentId } = res.data;
 
