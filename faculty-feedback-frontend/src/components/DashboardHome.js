@@ -9,16 +9,12 @@ const DashboardHome = () => {
   const [branchFilter, setBranchFilter] = useState("All");
   const [search, setSearch] = useState("");
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
+  /* ================= FETCH DATA ================= */
   useEffect(() => {
     fetchLeaderboard();
-
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  /* ================= APPLY FILTERS ================= */
   useEffect(() => {
     applyFilters();
   }, [leaderboard, campusFilter, branchFilter, search]);
@@ -65,6 +61,7 @@ const DashboardHome = () => {
     setFilteredData(data);
   };
 
+  /* ================= PERFORMANCE LABEL ================= */
   const getPerformanceStyle = (rating) => {
     const num = Number(rating);
 
@@ -74,6 +71,7 @@ const DashboardHome = () => {
     return { label: "Poor", color: "#dc2626" };
   };
 
+  /* ================= DOWNLOAD CSV ================= */
   const downloadCSV = () => {
     let rows = [
       [
@@ -120,34 +118,33 @@ const DashboardHome = () => {
   };
 
   return (
-    <div style={styles.page(isMobile)}>
-      <h1 style={styles.heading(isMobile)}>Faculty Feedback Dashboard</h1>
+    <div style={styles.page}>
+      <h1 style={styles.heading}>Faculty Feedback Dashboard</h1>
 
-      {/* Filters */}
-      <div style={styles.filterBox(isMobile)}>
+      {/* ================= FILTERS ================= */}
+      <div style={styles.filterBox}>
         <input
           placeholder="🔍 Search Faculty"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={styles.input(isMobile)}
+          style={styles.input}
         />
 
         <select
           value={campusFilter}
           onChange={(e) => setCampusFilter(e.target.value)}
-          style={styles.input(isMobile)}
+          style={styles.input}
         >
           <option>All</option>
           <option>RK Valley</option>
           <option>Ongole</option>
-          <option>Nuzvid</option>
-          <option>Srikakulam</option>
+      
         </select>
 
         <select
           value={branchFilter}
           onChange={(e) => setBranchFilter(e.target.value)}
-          style={styles.input(isMobile)}
+          style={styles.input}
         >
           <option>All</option>
           <option>CSE</option>
@@ -159,14 +156,14 @@ const DashboardHome = () => {
           <option>MME</option>
         </select>
 
-        <button onClick={downloadCSV} style={styles.downloadBtn(isMobile)}>
+        <button onClick={downloadCSV} style={styles.downloadBtn}>
           ⬇ Download CSV
         </button>
       </div>
 
-      {/* Faculty Cards */}
+      {/* ================= FACULTY DATA ================= */}
       {filteredData.map((fac, idx) => (
-        <div key={idx} style={styles.facultyCard(isMobile)}>
+        <div key={idx} style={styles.facultyCard}>
           <h2>{fac.faculty}</h2>
 
           {Object.entries(fac.campuses || {}).map(([campus, branches]) => (
@@ -177,7 +174,6 @@ const DashboardHome = () => {
                 <div key={branch}>
                   <h4>📘 {branch}</h4>
 
-                  {/* Scroll wrapper for mobile */}
                   <div style={styles.tableWrapper}>
                     <table style={styles.table}>
                       <thead>
@@ -230,47 +226,49 @@ const DashboardHome = () => {
 /* ===================== STYLES ===================== */
 
 const styles = {
-  page: (mobile) => ({
-    padding: mobile ? "10px" : "20px",
+  page: {
+    padding: "20px",
     fontFamily: "Segoe UI",
-  }),
+    maxWidth: "1200px",
+    margin: "0 auto",
+  },
 
-  heading: (mobile) => ({
-    fontSize: mobile ? "22px" : "28px",
+  heading: {
+    fontSize: "28px",
     marginBottom: "20px",
-  }),
+  },
 
-  filterBox: (mobile) => ({
+  filterBox: {
     display: "flex",
-    flexDirection: mobile ? "column" : "row",
     gap: "10px",
     marginBottom: "20px",
-  }),
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
 
-  input: (mobile) => ({
+  input: {
     padding: "8px",
     borderRadius: "6px",
     border: "1px solid #ccc",
-    width: mobile ? "100%" : "auto",
-  }),
+    minWidth: "180px",
+  },
 
-  downloadBtn: (mobile) => ({
+  downloadBtn: {
     background: "#16a34a",
     color: "#fff",
     border: "none",
     padding: "8px 14px",
     borderRadius: "6px",
     cursor: "pointer",
-    width: mobile ? "100%" : "auto",
-  }),
+  },
 
-  facultyCard: (mobile) => ({
+  facultyCard: {
     background: "#f8fafc",
-    padding: mobile ? "15px" : "20px",
+    padding: "20px",
     marginBottom: "20px",
     borderRadius: "10px",
     boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-  }),
+  },
 
   campusBox: {
     marginTop: "15px",
@@ -287,7 +285,6 @@ const styles = {
     width: "100%",
     borderCollapse: "collapse",
     marginTop: "8px",
-    minWidth: "500px",
   },
 
   tableHeader: {
