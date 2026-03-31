@@ -256,10 +256,11 @@ const ViewFeedback = () => {
 /* ================= RESPONSIVE STYLES ================= */
 const styles = {
   page: {
-    minHeight: "100vh",
-    padding: "20px",
-    background: "linear-gradient(135deg,#eef2ff,#e0f2fe)",
-  },
+  minHeight: "100vh",
+  padding: "20px",
+  background: "linear-gradient(135deg,#eef2ff,#e0f2fe)",
+  marginLeft: window.innerWidth >= 768 ? "240px" : "0px",
+},
 
   container: {
     maxWidth: "1200px",
