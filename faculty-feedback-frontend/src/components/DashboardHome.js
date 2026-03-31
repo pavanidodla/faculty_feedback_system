@@ -127,7 +127,7 @@ const DashboardHome = () => {
   /* ===================== UI ===================== */
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Segoe UI" }}>
+    <div style={{ padding: "20px", fontFamily: "Segoe UI", marginLeft: "240px" }}>
       <h1 style={{ marginBottom: "20px" }}>Faculty Feedback Dashboard</h1>
 
       {/* Filters */}
