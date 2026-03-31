@@ -4,10 +4,8 @@ import bcrypt from "bcryptjs";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/User.js";
 
-
 const router = express.Router();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
 
 /* ================= REGISTER ================= */
 router.post("/register", async (req, res) => {
@@ -16,7 +14,8 @@ router.post("/register", async (req, res) => {
     const email = req.body.email.toLowerCase();
     const password = req.body.password;
 
-    if (!email.endsWith("@rguktrkv.ac.in")) {
+    // Allow both RKV and Ongole domains
+    if (!email.endsWith("@rguktrkv.ac.in") && !email.endsWith("@rguktong.ac.in")) {
       return res.status(403).json({
         message: "Students must use RGUKT email"
       });
@@ -112,7 +111,8 @@ router.post("/google", async (req, res) => {
     const name = payload.name;
     const googleId = payload.sub;
 
-    if (!email.endsWith("@rguktrkv.ac.in")) {
+    // Allow both RKV and Ongole domains
+    if (!email.endsWith("@rguktrkv.ac.in") && !email.endsWith("@rguktong.ac.in")) {
       return res.status(403).json({
         message: "Use college Google account"
       });
@@ -121,7 +121,10 @@ router.post("/google", async (req, res) => {
     const adminEmails = [
       "hod@rguktrkv.ac.in",
       "dean@rguktrkv.ac.in",
-      "admin@rguktrkv.ac.in"
+      "admin@rguktrkv.ac.in",
+      "hod@rguktong.ac.in",
+      "dean@rguktong.ac.in",
+      "admin@rguktong.ac.in"
     ];
 
     const role = adminEmails.includes(email) ? "admin" : "student";
