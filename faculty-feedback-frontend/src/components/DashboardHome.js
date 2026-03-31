@@ -9,6 +9,8 @@ const DashboardHome = () => {
   const [branchFilter, setBranchFilter] = useState("All");
   const [search, setSearch] = useState("");
 
+  const [emailStatus, setEmailStatus] = useState("");
+
   useEffect(() => {
     fetchLeaderboard();
   }, []);
@@ -23,6 +25,19 @@ const DashboardHome = () => {
       setLeaderboard(res.data || []);
     } catch (err) {
       console.error("Error fetching leaderboard", err);
+    }
+  };
+
+  /* ===================== EMAIL FUNCTION ===================== */
+
+  const sendEmails = async () => {
+    try {
+      setEmailStatus("Sending emails...");
+      const res = await API.post("/admin/send-feedback-link");
+      setEmailStatus(res.data.message || "Emails sent successfully");
+    } catch (err) {
+      console.error(err);
+      setEmailStatus("Failed to send emails");
     }
   };
 
@@ -169,7 +184,13 @@ const DashboardHome = () => {
         <button onClick={downloadCSV} style={downloadBtn}>
           ⬇ Download CSV
         </button>
+
+        <button onClick={sendEmails} style={emailBtn}>
+          ✉ Send Feedback Link
+        </button>
       </div>
+
+      {emailStatus && <p style={{ marginBottom: "10px" }}>{emailStatus}</p>}
 
       {/* Faculty Cards */}
       {filteredData.map((fac, idx) => (
@@ -243,6 +264,7 @@ const filterBox = {
   display: "flex",
   gap: "10px",
   marginBottom: "20px",
+  flexWrap: "wrap",
 };
 
 const input = {
@@ -253,6 +275,15 @@ const input = {
 
 const downloadBtn = {
   background: "#16a34a",
+  color: "#fff",
+  border: "none",
+  padding: "8px 14px",
+  borderRadius: "6px",
+  cursor: "pointer",
+};
+
+const emailBtn = {
+  background: "#2563eb",
   color: "#fff",
   border: "none",
   padding: "8px 14px",
