@@ -227,11 +227,12 @@ const DashboardHome = () => {
 
 const styles = {
   page: {
-    padding: "20px",
-    fontFamily: "Segoe UI",
-    maxWidth: "1200px",
-    margin: "0 auto",
-  },
+  padding: "20px",
+  fontFamily: "Segoe UI",
+  maxWidth: "1200px",
+  margin: "0 auto",
+  marginLeft: window.innerWidth >= 768 ? "240px" : "0px",
+},
 
   heading: {
     fontSize: "28px",
