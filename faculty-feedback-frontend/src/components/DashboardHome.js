@@ -9,12 +9,10 @@ const DashboardHome = () => {
   const [branchFilter, setBranchFilter] = useState("All");
   const [search, setSearch] = useState("");
 
-  /* ================= FETCH DATA ================= */
   useEffect(() => {
     fetchLeaderboard();
   }, []);
 
-  /* ================= APPLY FILTERS ================= */
   useEffect(() => {
     applyFilters();
   }, [leaderboard, campusFilter, branchFilter, search]);
@@ -27,6 +25,8 @@ const DashboardHome = () => {
       console.error("Error fetching leaderboard", err);
     }
   };
+
+  /* ===================== FILTERING ===================== */
 
   const applyFilters = () => {
     let data = [...leaderboard];
@@ -61,17 +61,24 @@ const DashboardHome = () => {
     setFilteredData(data);
   };
 
-  /* ================= PERFORMANCE LABEL ================= */
+  /* ===================== PERFORMANCE LABEL ===================== */
+
   const getPerformanceStyle = (rating) => {
     const num = Number(rating);
 
-    if (num >= 4.5) return { label: "Excellent", color: "#16a34a" };
-    if (num >= 4) return { label: "Very Good", color: "#2563eb" };
-    if (num >= 3) return { label: "Average", color: "#d97706" };
-    return { label: "Poor", color: "#dc2626" };
+    if (num >= 4.5) {
+      return { label: "Excellent", color: "#16a34a" };
+    } else if (num >= 4) {
+      return { label: "Very Good", color: "#2563eb" };
+    } else if (num >= 3) {
+      return { label: "Average", color: "#d97706" };
+    } else {
+      return { label: "Poor", color: "#dc2626" };
+    }
   };
 
-  /* ================= DOWNLOAD CSV ================= */
+  /* ===================== DOWNLOAD CSV ===================== */
+
   const downloadCSV = () => {
     let rows = [
       [
@@ -117,34 +124,37 @@ const DashboardHome = () => {
     link.click();
   };
 
-  return (
-    <div style={styles.page}>
-      <h1 style={styles.heading}>Faculty Feedback Dashboard</h1>
+  /* ===================== UI ===================== */
 
-      {/* ================= FILTERS ================= */}
-      <div style={styles.filterBox}>
+  return (
+    <div style={{ padding: "20px", fontFamily: "Segoe UI" }}>
+      <h1 style={{ marginBottom: "20px" }}>Faculty Feedback Dashboard</h1>
+
+      {/* Filters */}
+      <div style={filterBox}>
         <input
           placeholder="🔍 Search Faculty"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={styles.input}
+          style={input}
         />
 
         <select
           value={campusFilter}
           onChange={(e) => setCampusFilter(e.target.value)}
-          style={styles.input}
+          style={input}
         >
           <option>All</option>
           <option>RK Valley</option>
           <option>Ongole</option>
-      
+          <option>Nuzvid</option>
+          <option>Srikakulam</option>
         </select>
 
         <select
           value={branchFilter}
           onChange={(e) => setBranchFilter(e.target.value)}
-          style={styles.input}
+          style={input}
         >
           <option>All</option>
           <option>CSE</option>
@@ -156,63 +166,67 @@ const DashboardHome = () => {
           <option>MME</option>
         </select>
 
-        <button onClick={downloadCSV} style={styles.downloadBtn}>
+        <button onClick={downloadCSV} style={downloadBtn}>
           ⬇ Download CSV
         </button>
       </div>
 
-      {/* ================= FACULTY DATA ================= */}
+      {/* Faculty Cards */}
       {filteredData.map((fac, idx) => (
-        <div key={idx} style={styles.facultyCard}>
-          <h2>{fac.faculty}</h2>
+        <div key={idx} style={facultyCard}>
+          <h2 style={{ marginBottom: "10px" }}>{fac.faculty}</h2>
 
           {Object.entries(fac.campuses || {}).map(([campus, branches]) => (
-            <div key={campus} style={styles.campusBox}>
-              <h3>🏫 {campus}</h3>
+            <div key={campus} style={campusBox}>
+              <h3 style={{ color: "#1e3a8a" }}>🏫 {campus}</h3>
 
               {Object.entries(branches || {}).map(([branch, years]) => (
                 <div key={branch}>
-                  <h4>📘 {branch}</h4>
+                  <h4 style={{ marginTop: "10px" }}>📘 {branch}</h4>
 
-                  <div style={styles.tableWrapper}>
-                    <table style={styles.table}>
-                      <thead>
-                        <tr style={styles.tableHeader}>
-                          <th style={styles.th}>Year</th>
-                          <th style={styles.th}>Rating</th>
-                          <th style={styles.th}>Status</th>
-                          <th style={styles.th}>Weak Area</th>
-                          <th style={styles.th}>Responses</th>
-                        </tr>
-                      </thead>
+                  <table style={table}>
+                    <thead>
+                      <tr style={{ background: "#0ea5e9", color: "#fff" }}>
+                        <th style={th}>Year</th>
+                        <th style={th}>Rating</th>
+                        <th style={th}>Status</th>
+                        <th style={th}>Weak Area</th>
+                        <th style={th}>Responses</th>
+                      </tr>
+                    </thead>
 
-                      <tbody>
-                        {Object.entries(years || {}).map(([year, data], i) => {
-                          const perf = getPerformanceStyle(data?.rating);
-                          return (
-                            <tr key={i}>
-                              <td style={styles.td}>{year}</td>
-                              <td style={styles.td}>{data?.rating || "-"}</td>
-                              <td style={styles.td}>
-                                <span
-                                  style={{
-                                    background: perf.color,
-                                    color: "#fff",
-                                    padding: "4px 12px",
-                                    borderRadius: "15px",
-                                  }}
-                                >
-                                  {perf.label}
-                                </span>
-                              </td>
-                              <td style={styles.td}>{data?.weakArea || "-"}</td>
-                              <td style={styles.td}>{data?.responses || 0}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                    <tbody>
+                      {Object.entries(years || {}).map(([year, data], i) => {
+                        const perf = getPerformanceStyle(data?.rating);
+
+                        return (
+                          <tr key={i}>
+                            <td style={td}>{year}</td>
+                            <td style={td}>{data?.rating || "-"}</td>
+
+                            <td style={td}>
+                              <span
+                                style={{
+                                  background: perf.color,
+                                  color: "#fff",
+                                  padding: "4px 12px",
+                                  borderRadius: "15px",
+                                }}
+                              >
+                                {perf.label}
+                              </span>
+                            </td>
+
+                            <td style={{ ...td, color: "#dc2626" }}>
+                              {data?.weakArea || "-"}
+                            </td>
+
+                            <td style={td}>{data?.responses || 0}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               ))}
             </div>
@@ -225,83 +239,56 @@ const DashboardHome = () => {
 
 /* ===================== STYLES ===================== */
 
-const styles = {
-  page: {
+const filterBox = {
+  display: "flex",
+  gap: "10px",
+  marginBottom: "20px",
+};
+
+const input = {
+  padding: "8px",
+  borderRadius: "6px",
+  border: "1px solid #ccc",
+};
+
+const downloadBtn = {
+  background: "#16a34a",
+  color: "#fff",
+  border: "none",
+  padding: "8px 14px",
+  borderRadius: "6px",
+  cursor: "pointer",
+};
+
+const facultyCard = {
+  background: "#f8fafc",
   padding: "20px",
-  fontFamily: "Segoe UI",
-  maxWidth: "1200px",
-  margin: "0 auto",
-  marginLeft: window.innerWidth >= 768 ? "240px" : "0px",
-},
+  marginBottom: "20px",
+  borderRadius: "10px",
+  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+};
 
-  heading: {
-    fontSize: "28px",
-    marginBottom: "20px",
-  },
+const campusBox = {
+  marginTop: "15px",
+  padding: "10px",
+  background: "#eef2ff",
+  borderRadius: "8px",
+};
 
-  filterBox: {
-    display: "flex",
-    gap: "10px",
-    marginBottom: "20px",
-    alignItems: "center",
-    flexWrap: "wrap",
-  },
+const table = {
+  width: "100%",
+  borderCollapse: "collapse",
+  marginTop: "8px",
+};
 
-  input: {
-    padding: "8px",
-    borderRadius: "6px",
-    border: "1px solid #ccc",
-    minWidth: "180px",
-  },
+const th = {
+  padding: "8px",
+  textAlign: "left",
+};
 
-  downloadBtn: {
-    background: "#16a34a",
-    color: "#fff",
-    border: "none",
-    padding: "8px 14px",
-    borderRadius: "6px",
-    cursor: "pointer",
-  },
-
-  facultyCard: {
-    background: "#f8fafc",
-    padding: "20px",
-    marginBottom: "20px",
-    borderRadius: "10px",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-  },
-
-  campusBox: {
-    marginTop: "15px",
-    padding: "10px",
-    background: "#eef2ff",
-    borderRadius: "8px",
-  },
-
-  tableWrapper: {
-    overflowX: "auto",
-  },
-
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-    marginTop: "8px",
-  },
-
-  tableHeader: {
-    background: "#0ea5e9",
-    color: "#fff",
-  },
-
-  th: {
-    padding: "8px",
-    textAlign: "left",
-  },
-
-  td: {
-    padding: "8px",
-    borderBottom: "1px solid #e5e7eb",
-  },
+const td = {
+  padding: "8px",
+  borderBottom: "1px solid #e5e7eb",
 };
 
 export default DashboardHome;
