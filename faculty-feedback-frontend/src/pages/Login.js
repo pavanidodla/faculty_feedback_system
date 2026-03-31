@@ -12,7 +12,7 @@ export default function Login() {
   /* ================= NORMAL / ADMIN LOGIN ================= */
   const handleLogin = async () => {
     try {
-      const res = await API.post("/auth/login", {
+      const res = await API.post("/api/auth/login", {
         email,
         password,
         role: isAdminForm ? "admin" : "user",
@@ -36,7 +36,7 @@ export default function Login() {
   /* ================= GOOGLE LOGIN ================= */
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      const res = await API.post("/auth/google", {
+      const res = await API.post("/api/auth/google", {
         token: credentialResponse.credential,
       });
       const { token, role, name, email: userEmail,studentId } = res.data;
