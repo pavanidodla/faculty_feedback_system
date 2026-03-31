@@ -11,28 +11,31 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
+    if (!name || !email || !password)
+      return res.status(400).json({ message: "All fields are required" });
+
     const lowerEmail = email.toLowerCase();
 
-    // Only allow RGUKT domains
-    if (!lowerEmail.endsWith("@rguktrkv.ac.in") && !lowerEmail.endsWith("@rguktong.ac.in")) {
+    if (
+      !lowerEmail.endsWith("@rguktrkv.ac.in") &&
+      !lowerEmail.endsWith("@rguktong.ac.in")
+    ) {
       return res.status(403).json({ message: "Use a valid RGUKT email" });
     }
 
-    // Check if user exists
     const exist = await User.findOne({ email: lowerEmail });
     if (exist) return res.status(400).json({ message: "User already exists" });
 
-    const studentId = lowerEmail.split("@")[0].toUpperCase();
-
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+    const studentId = lowerEmail.split("@")[0].toUpperCase();
 
     await User.create({
       name,
       email: lowerEmail,
       password: hashedPassword,
       studentId,
-      role: "student"
+      role: "student",
     });
 
     res.status(201).json({ message: "Registration successful" });
@@ -47,13 +50,19 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    const lowerEmail = email.toLowerCase();
 
+    if (!email || !password)
+      return res.status(400).json({ message: "Email and password required" });
+
+    const lowerEmail = email.toLowerCase();
     const user = await User.findOne({ email: lowerEmail });
+
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     if (!user.password)
-      return res.status(400).json({ message: "Use Google login for this account" });
+      return res.status(400).json({
+        message: "Use Google login for this account",
+      });
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(400).json({ message: "Invalid credentials" });
@@ -68,8 +77,9 @@ router.post("/login", async (req, res) => {
       token,
       role: user.role,
       name: user.name,
+      email: user.email,      // added
       studentId: user.studentId,
-      userId: user._id
+      userId: user._id,
     });
 
   } catch (err) {
@@ -82,9 +92,13 @@ router.post("/login", async (req, res) => {
 router.post("/google", async (req, res) => {
   try {
     const { token } = req.body;
+
+    if (!token)
+      return res.status(400).json({ message: "Token missing" });
+
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID
+      audience: process.env.GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
@@ -92,9 +106,13 @@ router.post("/google", async (req, res) => {
     const name = payload.name;
     const googleId = payload.sub;
 
-    // Only allow RGUKT domains
-    if (!email.endsWith("@rguktrkv.ac.in") && !email.endsWith("@rguktong.ac.in")) {
-      return res.status(403).json({ message: "Use a valid RGUKT Google account" });
+    if (
+      !email.endsWith("@rguktrkv.ac.in") &&
+      !email.endsWith("@rguktong.ac.in")
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Use a valid RGUKT Google account" });
     }
 
     const adminEmails = [
@@ -103,7 +121,7 @@ router.post("/google", async (req, res) => {
       "admin@rguktrkv.ac.in",
       "hod@rguktong.ac.in",
       "dean@rguktong.ac.in",
-      "admin@rguktong.ac.in"
+      "admin@rguktong.ac.in",
     ];
 
     const role = adminEmails.includes(email) ? "admin" : "student";
@@ -118,11 +136,11 @@ router.post("/google", async (req, res) => {
         email,
         googleId,
         studentId,
-        role
+        role,
       });
     } else {
       user.googleId = googleId;
-      user.role = role; // in case email is admin
+      user.role = role;
       await user.save();
     }
 
@@ -136,8 +154,9 @@ router.post("/google", async (req, res) => {
       token: jwtToken,
       role: user.role,
       name: user.name,
+      email: user.email,    // added
       studentId: user.studentId,
-      userId: user._id
+      userId: user._id,
     });
 
   } catch (err) {
