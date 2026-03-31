@@ -10,71 +10,53 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 /* ================= REGISTER ================= */
 router.post("/register", async (req, res) => {
   try {
-    const name = req.body.name;
-    const email = req.body.email.toLowerCase();
-    const password = req.body.password;
+    const { name, email, password } = req.body;
+    const lowerEmail = email.toLowerCase();
 
-    // Allow both RKV and Ongole domains
-    if (!email.endsWith("@rguktrkv.ac.in") && !email.endsWith("@rguktong.ac.in")) {
-      return res.status(403).json({
-        message: "Students must use RGUKT email"
-      });
+    // Only allow RGUKT domains
+    if (!lowerEmail.endsWith("@rguktrkv.ac.in") && !lowerEmail.endsWith("@rguktong.ac.in")) {
+      return res.status(403).json({ message: "Use a valid RGUKT email" });
     }
 
-    const exist = await User.findOne({ email });
-    if (exist) {
-      return res.status(400).json({
-        message: "User already exists"
-      });
-    }
+    // Check if user exists
+    const exist = await User.findOne({ email: lowerEmail });
+    if (exist) return res.status(400).json({ message: "User already exists" });
 
-    const studentId = email.split("@")[0].toUpperCase();
+    const studentId = lowerEmail.split("@")[0].toUpperCase();
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     await User.create({
       name,
-      email,
-      password,
+      email: lowerEmail,
+      password: hashedPassword,
       studentId,
       role: "student"
     });
 
-    res.status(201).json({
-      message: "Registration successful"
-    });
+    res.status(201).json({ message: "Registration successful" });
 
   } catch (err) {
     console.error("REGISTER ERROR:", err);
-
-    if (err.code === 11000) {
-      return res.status(400).json({
-        message: "Email already registered"
-      });
-    }
-
-    res.status(500).json({
-      message: "Server error"
-    });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
 /* ================= LOGIN ================= */
 router.post("/login", async (req, res) => {
   try {
-    const email = req.body.email.toLowerCase();
-    const password = req.body.password;
+    const { email, password } = req.body;
+    const lowerEmail = email.toLowerCase();
 
-    const user = await User.findOne({ email });
-    if (!user)
-      return res.status(400).json({ message: "Invalid credentials" });
+    const user = await User.findOne({ email: lowerEmail });
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     if (!user.password)
-      return res.status(400).json({
-        message: "Use Google login for this account"
-      });
+      return res.status(400).json({ message: "Use Google login for this account" });
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match)
-      return res.status(400).json({ message: "Invalid credentials" });
+    if (!match) return res.status(400).json({ message: "Invalid credentials" });
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -100,10 +82,9 @@ router.post("/login", async (req, res) => {
 router.post("/google", async (req, res) => {
   try {
     const { token } = req.body;
-
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: process.env.GOOGLE_CLIENT_ID
     });
 
     const payload = ticket.getPayload();
@@ -111,11 +92,9 @@ router.post("/google", async (req, res) => {
     const name = payload.name;
     const googleId = payload.sub;
 
-    // Allow both RKV and Ongole domains
+    // Only allow RGUKT domains
     if (!email.endsWith("@rguktrkv.ac.in") && !email.endsWith("@rguktong.ac.in")) {
-      return res.status(403).json({
-        message: "Use college Google account"
-      });
+      return res.status(403).json({ message: "Use a valid RGUKT Google account" });
     }
 
     const adminEmails = [
@@ -143,7 +122,7 @@ router.post("/google", async (req, res) => {
       });
     } else {
       user.googleId = googleId;
-      user.role = role;
+      user.role = role; // in case email is admin
       await user.save();
     }
 
@@ -161,8 +140,8 @@ router.post("/google", async (req, res) => {
       userId: user._id
     });
 
-  } catch (error) {
-    console.error("GOOGLE LOGIN ERROR:", error);
+  } catch (err) {
+    console.error("GOOGLE LOGIN ERROR:", err);
     res.status(500).json({ message: "Google login failed" });
   }
 });
