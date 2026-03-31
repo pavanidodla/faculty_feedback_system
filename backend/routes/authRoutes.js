@@ -49,23 +49,34 @@ router.post("/register", async (req, res) => {
 /* ================= LOGIN ================= */
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
 
     if (!email || !password)
       return res.status(400).json({ message: "Email and password required" });
 
-    const lowerEmail = email.toLowerCase();
-    const user = await User.findOne({ email: lowerEmail });
+    email = email.toLowerCase().trim();
+    password = password.trim();   // 🔴 prevents hidden spaces
 
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    const user = await User.findOne({ email });
+
+    if (!user)
+      return res.status(400).json({ message: "Invalid credentials" });
 
     if (!user.password)
       return res.status(400).json({
         message: "Use Google login for this account",
       });
 
+    console.log("LOGIN ATTEMPT:", email);
+    console.log("ENTERED PASSWORD:", password);
+    console.log("STORED HASH:", user.password);
+
     const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(400).json({ message: "Invalid credentials" });
+
+    console.log("PASSWORD MATCH:", match);
+
+    if (!match)
+      return res.status(400).json({ message: "Invalid credentials" });
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -77,7 +88,7 @@ router.post("/login", async (req, res) => {
       token,
       role: user.role,
       name: user.name,
-      email: user.email,      // added
+      email: user.email,
       studentId: user.studentId,
       userId: user._id,
     });
