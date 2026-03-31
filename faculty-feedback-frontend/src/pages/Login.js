@@ -5,14 +5,19 @@ import API from "../api";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [isAdminForm, setIsAdminForm] = useState(false); 
+
+  const [isAdminForm, setIsAdminForm] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // NORMAL LOGIN
+  /* ================= NORMAL LOGIN ================= */
   const handleLogin = async () => {
     try {
-      const res = await API.post("/api/auth/login", { email, password });
+      const res = await API.post("/api/auth/login", {
+        email,
+        password,
+      });
+
       const { token, role, name, studentId } = res.data;
 
       localStorage.setItem("token", token);
@@ -29,24 +34,25 @@ export default function Login() {
     }
   };
 
-  // GOOGLE LOGIN
+  /* ================= GOOGLE LOGIN ================= */
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       const res = await API.post("/api/auth/google", {
         token: credentialResponse.credential,
       });
+
       const { token, role, name, studentId } = res.data;
 
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
       localStorage.setItem("name", name);
-      localStorage.setItem("email", res.data.email);
+      localStorage.setItem("email", name); // or email if backend returns it
       localStorage.setItem("studentId", studentId);
 
       if (role === "admin") navigate("/admin-dashboard");
       else navigate("/dashboard");
 
-    } catch {
+    } catch (err) {
       alert("Google login failed");
     }
   };
@@ -55,11 +61,14 @@ export default function Login() {
     <div style={styles.wrapper}>
       <div style={styles.container}>
         <div style={styles.left}>
-          <img src="college.jpg" alt="Login" style={styles.image} />
+          <img src="/college.jpg" alt="Login" style={styles.image} />
         </div>
+
         <div style={styles.right}>
           <div style={styles.card}>
-            <h2 style={styles.title}>{isAdminForm ? "Admin Login" : "User Login"}</h2>
+            <h2 style={styles.title}>
+              {isAdminForm ? "Admin Login" : "User Login"}
+            </h2>
 
             <input
               type="email"
@@ -77,22 +86,40 @@ export default function Login() {
               style={styles.input}
             />
 
-            <button onClick={handleLogin} style={styles.loginBtn}>Login</button>
+            <button onClick={handleLogin} style={styles.loginBtn}>
+              Login
+            </button>
 
             <div style={{ marginTop: 15 }}>
-              <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => alert("Google Sign-in failed")} />
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => alert("Google Sign-in failed")}
+              />
             </div>
 
             <p style={styles.switchText}>
               {isAdminForm ? "Back to " : "Are you an admin? "}
-              <span onClick={() => { setIsAdminForm(!isAdminForm); setEmail(""); setPassword(""); }} style={styles.switchLink}>
+              <span
+                onClick={() => {
+                  setIsAdminForm(!isAdminForm);
+                  setEmail("");
+                  setPassword("");
+                }}
+                style={styles.switchLink}
+              >
                 {isAdminForm ? "User Login" : "Admin Login"}
               </span>
             </p>
 
             {!isAdminForm && (
               <p style={styles.registerText}>
-                Don’t have an account? <span onClick={() => navigate("/register")} style={styles.registerLink}>Register here</span>
+                Don’t have an account?{" "}
+                <span
+                  onClick={() => navigate("/register")}
+                  style={styles.registerLink}
+                >
+                  Register here
+                </span>
               </p>
             )}
           </div>
@@ -101,6 +128,7 @@ export default function Login() {
     </div>
   );
 }
+
 
 // ... keep the same `styles` object as before
 
