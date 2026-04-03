@@ -105,12 +105,9 @@ router.post("/google", async (req, res) => {
   try {
     const { token, expectedRole } = req.body;
 
-    // ✅ Check token
-    if (!token) {
-      return res.status(400).json({ message: "Token missing" });
-    }
+    if (!token) return res.status(400).json({ message: "Token missing" });
 
-    // ✅ Verify Google token
+    // 🔹 Verify token
     let ticket;
     try {
       ticket = await client.verifyIdToken({
@@ -118,31 +115,24 @@ router.post("/google", async (req, res) => {
         audience: process.env.GOOGLE_CLIENT_ID,
       });
     } catch (err) {
-      console.error("VERIFY ERROR:", err.message);
+      console.error("VERIFY ERROR:", err);
       return res.status(401).json({ message: "Invalid Google token" });
     }
 
     const payload = ticket.getPayload();
-
-    if (!payload) {
-      return res.status(400).json({ message: "Invalid payload" });
-    }
+    if (!payload) return res.status(400).json({ message: "Invalid payload" });
 
     const email = payload.email.toLowerCase();
     const name = payload.name || "User";
     const googleId = payload.sub;
 
-    // ✅ Allow only college emails
     if (
       !email.endsWith("@rguktrkv.ac.in") &&
       !email.endsWith("@rguktong.ac.in")
     ) {
-      return res.status(403).json({
-        message: "Use RGUKT Google account only",
-      });
+      return res.status(403).json({ message: "Use RGUKT Google account only" });
     }
 
-    // ✅ Admin detection
     const adminEmails = [
       "hod@rguktrkv.ac.in",
       "dean@rguktrkv.ac.in",
@@ -154,11 +144,11 @@ router.post("/google", async (req, res) => {
 
     const role = adminEmails.includes(email) ? "admin" : "student";
 
-    // ✅ Check if user exists
+    // 🔹 Find user
     let user = await User.findOne({ email });
 
     if (!user) {
-      // 🔥 CREATE NEW USER
+      // ✅ Create new user
       user = await User.create({
         name,
         email,
@@ -167,29 +157,23 @@ router.post("/google", async (req, res) => {
         role,
       });
     } else {
-      // 🔥 UPDATE EXISTING USER (SAFE FIX)
+      // ✅ Update existing user safely
       user.googleId = googleId;
       user.role = role;
-
-      // ❗ Prevent validation issues
       await user.save({ validateBeforeSave: false });
     }
 
-    // 🔴 STRICT ROLE CHECK
+    // 🔹 Strict role check
     if (expectedRole && role !== expectedRole) {
-      return res.status(403).json({
-        message: `Access denied: ${expectedRole} only`,
-      });
+      return res.status(403).json({ message: `Access denied: ${expectedRole} only` });
     }
 
-    // ✅ Generate JWT
     const jwtToken = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
-    // ✅ Send response
     res.json({
       token: jwtToken,
       role: user.role,
