@@ -105,9 +105,8 @@ router.post("/google", async (req, res) => {
   try {
     const { token, expectedRole } = req.body;
 
-    if (!token) {
+    if (!token)
       return res.status(400).json({ message: "Token missing" });
-    }
 
     let ticket;
 
@@ -122,10 +121,8 @@ router.post("/google", async (req, res) => {
     }
 
     const payload = ticket.getPayload();
-
-    if (!payload) {
+    if (!payload)
       return res.status(400).json({ message: "Invalid payload" });
-    }
 
     const email = payload.email.toLowerCase();
     const name = payload.name || "User";
@@ -153,6 +150,7 @@ router.post("/google", async (req, res) => {
 
     let user = await User.findOne({ email });
 
+    // ✅ CREATE NEW USER
     if (!user) {
       user = await User.create({
         name,
@@ -161,6 +159,20 @@ router.post("/google", async (req, res) => {
         studentId: email.split("@")[0].toUpperCase(),
         role,
       });
+    } 
+    // ✅ UPDATE EXISTING USER (FIX FOR 500 ERROR)
+    else {
+      await User.updateOne(
+        { email },
+        {
+          $set: {
+            googleId,
+            role,
+          },
+        }
+      );
+
+      user = await User.findOne({ email }); // refresh
     }
 
     // 🔴 ROLE CHECK
@@ -189,7 +201,6 @@ router.post("/google", async (req, res) => {
     res.status(500).json({ message: "Google login failed" });
   }
 });
-
 /* ================= FORGOT PASSWORD ================= */
 router.post("/forgot-password", async (req, res) => {
   try {
