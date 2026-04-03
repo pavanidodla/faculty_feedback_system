@@ -1,6 +1,8 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import nodemailer from "nodemailer";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/User.js";
 
@@ -10,29 +12,32 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 /* ================= REGISTER ================= */
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    let { name, email, password } = req.body;
 
     if (!name || !email || !password)
       return res.status(400).json({ message: "All fields are required" });
 
-    const lowerEmail = email.toLowerCase();
+    email = email.toLowerCase().trim();
+    name = name.trim();
+    password = password.trim();
 
     if (
-      !lowerEmail.endsWith("@rguktrkv.ac.in") &&
-      !lowerEmail.endsWith("@rguktong.ac.in")
+      !email.endsWith("@rguktrkv.ac.in") &&
+      !email.endsWith("@rguktong.ac.in")
     ) {
       return res.status(403).json({ message: "Use a valid RGUKT email" });
     }
 
-    const exist = await User.findOne({ email: lowerEmail });
-    if (exist) return res.status(400).json({ message: "User already exists" });
+    const exist = await User.findOne({ email });
+    if (exist)
+      return res.status(400).json({ message: "User already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const studentId = lowerEmail.split("@")[0].toUpperCase();
+    const studentId = email.split("@")[0]?.toUpperCase() || "N/A";
 
     await User.create({
       name,
-      email: lowerEmail,
+      email,
       password: hashedPassword,
       studentId,
       role: "student",
@@ -49,7 +54,7 @@ router.post("/register", async (req, res) => {
 /* ================= LOGIN ================= */
 router.post("/login", async (req, res) => {
   try {
-    let { email, password } = req.body;
+    let { email, password, expectedRole } = req.body;
 
     if (!email || !password)
       return res.status(400).json({ message: "Email and password required" });
@@ -57,29 +62,21 @@ router.post("/login", async (req, res) => {
     email = email.toLowerCase().trim();
     password = password.trim();
 
-    let user = await User.findOne({ email });
+    const user = await User.findOne({ email });
 
     if (!user)
       return res.status(400).json({ message: "User not found" });
 
-    /* =====================================================
-       TEMP FIX: If bcrypt compare fails, reset password
-    ====================================================== */
-    let match = false;
+    const match = await bcrypt.compare(password, user.password);
 
-    if (user.password) {
-      match = await bcrypt.compare(password, user.password);
-    }
+    if (!match)
+      return res.status(400).json({ message: "Wrong password" });
 
-    // If password doesn't match, force reset to entered password
-    if (!match) {
-      console.log("Password mismatch. Resetting password automatically...");
-
-      const newHash = await bcrypt.hash(password, 10);
-      user.password = newHash;
-      await user.save();
-
-      match = true;
+    // 🔴 STRICT ROLE CHECK
+    if (expectedRole && user.role !== expectedRole) {
+      return res.status(403).json({
+        message: `Access denied: ${expectedRole} login only`,
+      });
     }
 
     const token = jwt.sign(
@@ -106,7 +103,7 @@ router.post("/login", async (req, res) => {
 /* ================= GOOGLE LOGIN ================= */
 router.post("/google", async (req, res) => {
   try {
-    const { token } = req.body;
+    const { token, expectedRole } = req.body;
 
     if (!token)
       return res.status(400).json({ message: "Token missing" });
@@ -144,7 +141,7 @@ router.post("/google", async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      const studentId = email.split("@")[0].toUpperCase();
+      const studentId = email.split("@")[0]?.toUpperCase() || "N/A";
 
       user = await User.create({
         name,
@@ -159,6 +156,13 @@ router.post("/google", async (req, res) => {
       await user.save();
     }
 
+    // 🔴 STRICT ROLE CHECK
+    if (expectedRole && user.role !== expectedRole) {
+      return res.status(403).json({
+        message: `Access denied: ${expectedRole} login only`,
+      });
+    }
+
     const jwtToken = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -169,7 +173,7 @@ router.post("/google", async (req, res) => {
       token: jwtToken,
       role: user.role,
       name: user.name,
-      email: user.email,    // added
+      email: user.email,
       studentId: user.studentId,
       userId: user._id,
     });
@@ -177,6 +181,75 @@ router.post("/google", async (req, res) => {
   } catch (err) {
     console.error("GOOGLE LOGIN ERROR:", err);
     res.status(500).json({ message: "Google login failed" });
+  }
+});
+
+/* ================= FORGOT PASSWORD ================= */
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
+
+    const token = crypto.randomBytes(32).toString("hex");
+
+    user.resetToken = token;
+    user.resetTokenExpiry = Date.now() + 10 * 60 * 1000;
+
+    await user.save();
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const link = `http://localhost:3000/reset-password/${token}`;
+
+    await transporter.sendMail({
+      to: email,
+      subject: "Reset Password",
+      html: `<h3>Password Reset</h3>
+             <p>Click below link to reset password:</p>
+             <a href="${link}">${link}</a>`,
+    });
+
+    res.json({ message: "Reset link sent to email" });
+
+  } catch (err) {
+    console.error("FORGOT PASSWORD ERROR:", err);
+    res.status(500).json({ message: "Error sending email" });
+  }
+});
+
+/* ================= RESET PASSWORD ================= */
+router.post("/reset-password/:token", async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    const user = await User.findOne({
+      resetToken: req.params.token,
+      resetTokenExpiry: { $gt: Date.now() },
+    });
+
+    if (!user)
+      return res.status(400).json({ message: "Invalid or expired token" });
+
+    user.password = await bcrypt.hash(password, 10);
+    user.resetToken = undefined;
+    user.resetTokenExpiry = undefined;
+
+    await user.save();
+
+    res.json({ message: "Password reset successful" });
+
+  } catch (err) {
+    console.error("RESET PASSWORD ERROR:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
