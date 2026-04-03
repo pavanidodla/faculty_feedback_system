@@ -52,8 +52,7 @@ export default function Register() {
     }
   };
 
-  /* ================= GOOGLE LOGIN ================= */
- const handleGoogleSuccess = async (credentialResponse) => {
+const handleGoogleSuccess = async (credentialResponse) => {
   try {
     setError("");
 
@@ -87,7 +86,6 @@ export default function Register() {
     setError(err.response?.data?.message || "Google login failed");
   }
 };
-
   return (
     <div style={styles.wrapper}>
       <div style={styles.container}>
