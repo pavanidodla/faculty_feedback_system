@@ -117,3 +117,86 @@ export default function Login() {
     </div>
   );
 }
+const styles = {
+  wrapper: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100vh",
+    background: "#f4f6f8",
+    padding: "20px",
+  },
+  container: {
+    display: "flex",
+    width: "700px",
+    height: "450px",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+    borderRadius: "12px",
+    overflow: "hidden",
+  },
+  left: {
+    flex: 1,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    background: "#e0e0e0",
+    padding: "15px",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    borderRadius: "12px",
+  },
+  right: {
+    flex: 1,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    background: "#ffffff",
+    padding: "20px",
+  },
+  card: {
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    textAlign: "center",
+    padding: "20px",
+  },
+  title: { marginBottom: "15px", fontSize: "22px", fontWeight: "bold" },
+  input: {
+    width: "93%",
+    padding: "10px",
+    margin: "8px 0",
+    borderRadius: "5px",
+    border: "1px solid #ccc",
+  },
+  loginBtn: {
+    width: "100%",
+    padding: "10px",
+    marginTop: "10px",
+    background: "#1e88e5",
+    color: "white",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+  },
+  switchText: {
+    marginTop: "12px",
+    fontSize: "14px",
+  },
+  switchLink: {
+    color: "#1e88e5",
+    cursor: "pointer",
+    fontWeight: "bold",
+  },
+  registerText: {
+    marginTop: "8px",
+    fontSize: "14px",
+  },
+  registerLink: {
+    color: "#1e88e5",
+    cursor: "pointer",
+    fontWeight: "bold",
+  },
+};
