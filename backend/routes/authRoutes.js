@@ -107,14 +107,13 @@ router.post("/google", async (req, res) => {
 
     if (!token) return res.status(400).json({ message: "Token missing" });
 
-    // 🔹 VERIFY GOOGLE TOKEN
+    // 1️⃣ Verify Google token
     let ticket;
     try {
       ticket = await client.verifyIdToken({
         idToken: token,
         audience: process.env.GOOGLE_CLIENT_ID,
       });
-      console.log("Google token verified:", ticket.getPayload());
     } catch (err) {
       console.error("Google token verification failed:", err);
       return res.status(401).json({ message: "Invalid Google token" });
@@ -127,12 +126,12 @@ router.post("/google", async (req, res) => {
     const name = payload.name || "User";
     const googleId = payload.sub;
 
-    // 🔹 CHECK COLLEGE EMAIL
+    // 2️⃣ Ensure RGUKT email
     if (!email.endsWith("@rguktrkv.ac.in") && !email.endsWith("@rguktong.ac.in")) {
       return res.status(403).json({ message: "Use RGUKT Google account only" });
     }
 
-    // 🔹 DETERMINE ROLE
+    // 3️⃣ Determine role
     const adminEmails = [
       "hod@rguktrkv.ac.in",
       "dean@rguktrkv.ac.in",
@@ -143,34 +142,33 @@ router.post("/google", async (req, res) => {
     ];
     const role = adminEmails.includes(email) ? "admin" : "student";
 
-    // 🔹 FIND EXISTING USER
+    // 4️⃣ Find existing user
     let user = await User.findOne({ email });
 
     if (!user) {
-      // ✅ CREATE NEW USER
-      user = await User.create({
+      // ✅ Create new Google user
+      user = new User({
         name,
         email,
         googleId,
         studentId: email.split("@")[0].toUpperCase(),
         role,
-        // password is NOT required for Google users
+        password: undefined, // important! password not required for Google users
       });
-      console.log("New Google user created:", user.email);
+      await user.save();
     } else {
-      // ✅ UPDATE EXISTING USER (SAFE)
+      // ✅ Update existing user safely
       user.googleId = googleId;
       user.role = role;
       await user.save({ validateBeforeSave: false });
-      console.log("Existing user updated with Google login:", user.email);
     }
 
-    // 🔹 STRICT ROLE CHECK
+    // 5️⃣ Check expected role
     if (expectedRole && role !== expectedRole) {
       return res.status(403).json({ message: `Access denied: ${expectedRole} only` });
     }
 
-    // 🔹 GENERATE JWT
+    // 6️⃣ Generate JWT
     const jwtToken = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -186,7 +184,7 @@ router.post("/google", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("GOOGLE LOGIN ROUTE ERROR:", err);
+    console.error("Google login route error:", err);
     res.status(500).json({ message: "Google login failed" });
   }
 });
