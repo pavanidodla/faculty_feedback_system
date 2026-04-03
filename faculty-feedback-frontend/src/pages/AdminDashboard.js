@@ -9,7 +9,7 @@ import ExportFeedback from "../components/ExportFeedback";
 export default function AdminDashboard() {
   return (
     <Routes>
-      <Route path="/" element={<AdminLayout />}>
+      <Route element={<AdminLayout />}>
         <Route index element={<DashboardPage />} />
         <Route path="subjects" element={<ManageSubjects />} />
         <Route path="feedback" element={<ViewFeedback />} />
