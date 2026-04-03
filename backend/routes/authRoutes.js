@@ -189,7 +189,7 @@ router.post("/google", async (req, res) => {
   console.error(err);
   console.error(err.message);
   console.error(err.stack);
-    res.status(500).json({ message: "Google login failed" });
+    res.status(500).json({ message:err.message || "Google login failed" });
   }
 });
 /* ================= FORGOT PASSWORD ================= */
