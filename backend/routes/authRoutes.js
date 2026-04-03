@@ -105,26 +105,39 @@ router.post("/google", async (req, res) => {
   try {
     const { token, expectedRole } = req.body;
 
-    if (!token)
+    if (!token) {
       return res.status(400).json({ message: "Token missing" });
+    }
 
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
+    let ticket;
+
+    try {
+      ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+    } catch (err) {
+      console.error("VERIFY ERROR:", err.message);
+      return res.status(401).json({ message: "Invalid Google token" });
+    }
 
     const payload = ticket.getPayload();
+
+    if (!payload) {
+      return res.status(400).json({ message: "Invalid payload" });
+    }
+
     const email = payload.email.toLowerCase();
-    const name = payload.name;
+    const name = payload.name || "User";
     const googleId = payload.sub;
 
     if (
       !email.endsWith("@rguktrkv.ac.in") &&
       !email.endsWith("@rguktong.ac.in")
     ) {
-      return res
-        .status(403)
-        .json({ message: "Use a valid RGUKT Google account" });
+      return res.status(403).json({
+        message: "Use RGUKT Google account only",
+      });
     }
 
     const adminEmails = [
@@ -141,25 +154,19 @@ router.post("/google", async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      const studentId = email.split("@")[0]?.toUpperCase() || "N/A";
-
       user = await User.create({
         name,
         email,
         googleId,
-        studentId,
+        studentId: email.split("@")[0].toUpperCase(),
         role,
       });
-    } else {
-      user.googleId = googleId;
-      user.role = role;
-      await user.save();
     }
 
-    // 🔴 STRICT ROLE CHECK
-    if (expectedRole && user.role !== expectedRole) {
+    // 🔴 ROLE CHECK
+    if (expectedRole && role !== expectedRole) {
       return res.status(403).json({
-        message: `Access denied: ${expectedRole} login only`,
+        message: `Access denied: ${expectedRole} only`,
       });
     }
 
@@ -175,11 +182,10 @@ router.post("/google", async (req, res) => {
       name: user.name,
       email: user.email,
       studentId: user.studentId,
-      userId: user._id,
     });
 
   } catch (err) {
-    console.error("GOOGLE LOGIN ERROR:", err);
+    console.error("GOOGLE LOGIN ERROR FULL:", err);
     res.status(500).json({ message: "Google login failed" });
   }
 });
