@@ -105,11 +105,13 @@ router.post("/google", async (req, res) => {
   try {
     const { token, expectedRole } = req.body;
 
-    if (!token)
+    // ✅ Check token
+    if (!token) {
       return res.status(400).json({ message: "Token missing" });
+    }
 
+    // ✅ Verify Google token
     let ticket;
-
     try {
       ticket = await client.verifyIdToken({
         idToken: token,
@@ -121,13 +123,16 @@ router.post("/google", async (req, res) => {
     }
 
     const payload = ticket.getPayload();
-    if (!payload)
+
+    if (!payload) {
       return res.status(400).json({ message: "Invalid payload" });
+    }
 
     const email = payload.email.toLowerCase();
     const name = payload.name || "User";
     const googleId = payload.sub;
 
+    // ✅ Allow only college emails
     if (
       !email.endsWith("@rguktrkv.ac.in") &&
       !email.endsWith("@rguktong.ac.in")
@@ -137,6 +142,7 @@ router.post("/google", async (req, res) => {
       });
     }
 
+    // ✅ Admin detection
     const adminEmails = [
       "hod@rguktrkv.ac.in",
       "dean@rguktrkv.ac.in",
@@ -148,10 +154,11 @@ router.post("/google", async (req, res) => {
 
     const role = adminEmails.includes(email) ? "admin" : "student";
 
+    // ✅ Check if user exists
     let user = await User.findOne({ email });
 
-    // ✅ CREATE NEW USER
     if (!user) {
+      // 🔥 CREATE NEW USER
       user = await User.create({
         name,
         email,
@@ -159,35 +166,30 @@ router.post("/google", async (req, res) => {
         studentId: email.split("@")[0].toUpperCase(),
         role,
       });
-    } 
-    // ✅ UPDATE EXISTING USER (FIX FOR 500 ERROR)
-    else {
-      await User.updateOne(
-        { email },
-        {
-          $set: {
-            googleId,
-            role,
-          },
-        }
-      );
+    } else {
+      // 🔥 UPDATE EXISTING USER (SAFE FIX)
+      user.googleId = googleId;
+      user.role = role;
 
-      user = await User.findOne({ email }); // refresh
+      // ❗ Prevent validation issues
+      await user.save({ validateBeforeSave: false });
     }
 
-    // 🔴 ROLE CHECK
+    // 🔴 STRICT ROLE CHECK
     if (expectedRole && role !== expectedRole) {
       return res.status(403).json({
         message: `Access denied: ${expectedRole} only`,
       });
     }
 
+    // ✅ Generate JWT
     const jwtToken = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
+    // ✅ Send response
     res.json({
       token: jwtToken,
       role: user.role,
