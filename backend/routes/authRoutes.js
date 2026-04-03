@@ -107,7 +107,7 @@ router.post("/google", async (req, res) => {
 
     if (!token) return res.status(400).json({ message: "Token missing" });
 
-    // 🔹 Verify token
+    // 🔹 Verify Google ID token
     let ticket;
     try {
       ticket = await client.verifyIdToken({
@@ -126,13 +126,12 @@ router.post("/google", async (req, res) => {
     const name = payload.name || "User";
     const googleId = payload.sub;
 
-    if (
-      !email.endsWith("@rguktrkv.ac.in") &&
-      !email.endsWith("@rguktong.ac.in")
-    ) {
+    // 🔹 Only allow RGUKT emails
+    if (!email.endsWith("@rguktrkv.ac.in") && !email.endsWith("@rguktong.ac.in")) {
       return res.status(403).json({ message: "Use RGUKT Google account only" });
     }
 
+    // 🔹 Admin emails
     const adminEmails = [
       "hod@rguktrkv.ac.in",
       "dean@rguktrkv.ac.in",
@@ -144,7 +143,7 @@ router.post("/google", async (req, res) => {
 
     const role = adminEmails.includes(email) ? "admin" : "student";
 
-    // 🔹 Find user
+    // 🔹 Find existing user
     let user = await User.findOne({ email });
 
     if (!user) {
@@ -168,6 +167,7 @@ router.post("/google", async (req, res) => {
       return res.status(403).json({ message: `Access denied: ${expectedRole} only` });
     }
 
+    // 🔹 Generate JWT
     const jwtToken = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
