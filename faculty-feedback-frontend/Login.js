@@ -181,7 +181,6 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
     minHeight: "100vh",
-    background: "#f4f6f8",
     padding: "10px",
   },
 
