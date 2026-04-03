@@ -1,52 +1,80 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import API from "../api";
 
 export default function Register() {
   const navigate = useNavigate();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  /* ================= REGISTER ================= */
   const handleRegister = async () => {
-  try {
-    setError("");
-    setSuccess("");
+    try {
+      setError("");
+      setSuccess("");
 
-    // Allow only college emails
-    if (
-      !email.endsWith("@rguktrkv.ac.in") &&
-      !email.endsWith("@rguktong.ac.in")
-    ) {
-      return setError(
-        "Use your college email (@rguktrkv.ac.in or @rguktong.ac.in)"
-      );
+      // ✅ Allow only college emails
+      if (
+        !email.endsWith("@rguktrkv.ac.in") &&
+        !email.endsWith("@rguktong.ac.in")
+      ) {
+        return setError(
+          "Use your college email (@rguktrkv.ac.in or @rguktong.ac.in)"
+        );
+      }
+
+      // ✅ Strong password validation
+      const strongPassword =
+        /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
+
+      if (!strongPassword.test(password)) {
+        return setError(
+          "Password must contain letters, numbers, and symbols (@$!%*?&) and be at least 6 characters"
+        );
+      }
+
+      // ✅ API call
+      await API.post("/api/auth/register", {
+        name,
+        email,
+        password,
+      });
+
+      setSuccess("Registration successful. You can now login.");
+      setTimeout(() => navigate("/"), 1500);
+    } catch (err) {
+      setError(err.response?.data?.message || "Registration failed");
     }
+  };
 
-    const res = await API.post("/api/auth/register", {
-      name,
-      email,
-      password,
-    });
+  /* ================= GOOGLE LOGIN ================= */
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setError("");
 
-    setSuccess("Registration successful. You can now login.");
-    setTimeout(() => navigate("/"), 1500);
-  } catch (err) {
-    setError(err.response?.data?.message || "Registration failed");
-  }
-};
+      const res = await API.post("/api/auth/google", {
+        token: credentialResponse.credential,
+      });
+
+      localStorage.setItem("token", res.data.token);
+      navigate("/dashboard");
+    } catch (err) {
+      setError("Google login failed");
+    }
+  };
+
   return (
     <div style={styles.wrapper}>
       <div style={styles.container}>
+        
         {/* LEFT IMAGE */}
         <div style={styles.left}>
-          <img
-            src="/college.jpg"
-            alt="College"
-            style={styles.image}
-          />
+          <img src="/college.jpg" alt="College" style={styles.image} />
         </div>
 
         {/* RIGHT FORM */}
@@ -81,9 +109,22 @@ export default function Register() {
               style={styles.input}
             />
 
+            {/* 🔹 Password Hint */}
+            <p style={styles.hint}>
+              Password must include letters, numbers & symbols
+            </p>
+
             <button style={styles.registerBtn} onClick={handleRegister}>
               Register
             </button>
+
+            {/* 🔹 Google Sign-In */}
+            <div style={{ marginTop: "15px" }}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setError("Google Login Failed")}
+              />
+            </div>
 
             <p style={styles.loginText}>
               Already have an account?{" "}
@@ -126,7 +167,6 @@ const styles = {
     alignItems: "center",
     background: "#e0e0e0",
     padding: "15px",
-    position: "relative",
   },
   image: {
     width: "100%",
@@ -149,13 +189,22 @@ const styles = {
     textAlign: "center",
     padding: "10px",
   },
-  title: { marginBottom: "15px", fontSize: "22px", fontWeight: "bold" },
+  title: {
+    marginBottom: "15px",
+    fontSize: "22px",
+    fontWeight: "bold",
+  },
   input: {
     width: "100%",
     padding: "10px",
     margin: "8px 0",
     borderRadius: "5px",
     border: "1px solid #ccc",
+  },
+  hint: {
+    fontSize: "12px",
+    color: "#777",
+    marginBottom: "5px",
   },
   registerBtn: {
     width: "100%",
@@ -185,4 +234,3 @@ const styles = {
     fontSize: "14px",
   },
 };
-
