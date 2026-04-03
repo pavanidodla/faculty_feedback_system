@@ -156,6 +156,7 @@ export default function Login() {
     </div>
   </div>
 );
+            }
 const styles = {
   wrapper: {
     display: "flex",
