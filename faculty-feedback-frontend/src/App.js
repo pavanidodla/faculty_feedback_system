@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -7,7 +7,6 @@ import FeedbackForm from "./pages/FeedbackForm";
 import ViewFeedback from "./pages/viewFeedback";
 import AdminDashboard from "./pages/AdminDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
-import AdminRoute from "./components/AdminRoute";
 import Layout from "./components/Layout";
 
 export default function App() {
@@ -23,16 +22,16 @@ export default function App() {
         <Route
           path="/admin-dashboard/*"
           element={
-            <AdminRoute>
+            <ProtectedRoute role="admin">
               <AdminDashboard />
-            </AdminRoute>
+            </ProtectedRoute>
           }
         />
 
         {/* ================= STUDENT ROUTES ================= */}
         <Route
           element={
-            <ProtectedRoute>
+            <ProtectedRoute role="student">
               <Layout />
             </ProtectedRoute>
           }
@@ -40,11 +39,10 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/feedback" element={<FeedbackForm />} />
           <Route path="/view-feedback" element={<ViewFeedback />} />
-          
         </Route>
 
         {/* ================= FALLBACK ================= */}
-        <Route path="*" element={<Login />} />
+        <Route path="*" element={<Navigate to="/" />} />
 
       </Routes>
     </BrowserRouter>
