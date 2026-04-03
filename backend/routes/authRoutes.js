@@ -184,7 +184,11 @@ router.post("/google", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Google login route error:", err);
+    
+     console.error("🔥 GOOGLE LOGIN FULL ERROR:");
+  console.error(err);
+  console.error(err.message);
+  console.error(err.stack);
     res.status(500).json({ message: "Google login failed" });
   }
 });
