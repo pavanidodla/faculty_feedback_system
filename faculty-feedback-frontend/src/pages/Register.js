@@ -53,20 +53,40 @@ export default function Register() {
   };
 
   /* ================= GOOGLE LOGIN ================= */
-  const handleGoogleSuccess = async (credentialResponse) => {
-    try {
-      setError("");
+ const handleGoogleSuccess = async (credentialResponse) => {
+  try {
+    setError("");
 
-      const res = await API.post("/api/auth/google", {
-        token: credentialResponse.credential,
-      });
+    const res = await API.post("/api/auth/google", {
+      token: credentialResponse.credential,
+      expectedRole: isAdminForm ? "admin" : "student", // 🔥 REQUIRED
+    });
 
-      localStorage.setItem("token", res.data.token);
-      navigate("/dashboard");
-    } catch (err) {
-      setError("Google login failed");
+    const { token, role, name, email, studentId } = res.data;
+
+    // 🔴 STRICT ROLE CHECK (frontend safety)
+    if (isAdminForm && role !== "admin") {
+      return setError("Not an admin");
     }
-  };
+    if (!isAdminForm && role !== "student") {
+      return setError("Not a student");
+    }
+
+    // ✅ STORE DATA
+    localStorage.setItem("token", token);
+    localStorage.setItem("role", role);
+    localStorage.setItem("name", name);
+    localStorage.setItem("email", email);
+    localStorage.setItem("studentId", studentId);
+
+    // ✅ REDIRECT
+    navigate(role === "admin" ? "/admin-dashboard" : "/dashboard");
+
+  } catch (err) {
+    console.error("Google Login Error:", err);
+    setError(err.response?.data?.message || "Google login failed");
+  }
+};
 
   return (
     <div style={styles.wrapper}>
