@@ -58,18 +58,10 @@ const handleGoogleSuccess = async (credentialResponse) => {
 
     const res = await API.post("/api/auth/google", {
       token: credentialResponse.credential,
-      expectedRole: isAdminForm ? "admin" : "student", // 🔥 REQUIRED
+      expectedRole: "student", // ✅ FIXED
     });
 
     const { token, role, name, email, studentId } = res.data;
-
-    // 🔴 STRICT ROLE CHECK (frontend safety)
-    if (isAdminForm && role !== "admin") {
-      return setError("Not an admin");
-    }
-    if (!isAdminForm && role !== "student") {
-      return setError("Not a student");
-    }
 
     // ✅ STORE DATA
     localStorage.setItem("token", token);
@@ -79,7 +71,7 @@ const handleGoogleSuccess = async (credentialResponse) => {
     localStorage.setItem("studentId", studentId);
 
     // ✅ REDIRECT
-    navigate(role === "admin" ? "/admin-dashboard" : "/dashboard");
+    navigate("/dashboard");
 
   } catch (err) {
     console.error("Google Login Error:", err);
