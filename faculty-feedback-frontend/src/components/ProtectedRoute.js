@@ -4,14 +4,13 @@ export default function ProtectedRoute({ children, role }) {
   const token = localStorage.getItem("token");
   const userRole = localStorage.getItem("role");
 
-  // ❌ Not logged in
-  if (!token) {
-    return <Navigate to="/" replace />;
-  }
+  if (!token) return <Navigate to="/" replace />;
 
-  // ❌ Role mismatch (strict access control)
   if (role && userRole !== role) {
-    return <Navigate to="/" replace />;
+    // 🔁 Redirect to correct dashboard instead of login
+    return userRole === "admin"
+      ? <Navigate to="/admin-dashboard" replace />
+      : <Navigate to="/dashboard" replace />;
   }
 
   return children;
