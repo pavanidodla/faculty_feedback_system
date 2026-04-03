@@ -74,129 +74,190 @@ export default function Login() {
     }
   };
 
-  return (
-    <div style={{ textAlign: "center", marginTop: "100px" }}>
-      <h2>{isAdminForm ? "Admin Login" : "Student Login"}</h2>
+ return (
+  <div style={styles.wrapper}>
+    <div style={styles.container}>
+      
+      {/* LEFT IMAGE */}
+      <div style={styles.left}>
+        <img src="/college.jpg" alt="login" style={styles.image} />
+      </div>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {/* RIGHT FORM */}
+      <div style={styles.right}>
+        <div style={styles.card}>
 
-      <input
-        type="email"
-        placeholder="College Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      /><br /><br />
+          <h2 style={styles.title}>
+            {isAdminForm ? "Admin Login" : "Student Login"}
+          </h2>
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      /><br /><br />
+          {error && <p style={styles.error}>{error}</p>}
 
-      <button onClick={handleLogin}>Login</button>
+          <input
+            type="email"
+            placeholder="College Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={styles.input}
+          />
 
-      <p onClick={() => navigate("/forgot-password")} style={{ cursor: "pointer", color: "blue" }}>
-        Forgot Password?
-      </p>
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={styles.input}
+          />
 
-      <GoogleLogin onSuccess={handleGoogleSuccess} />
+          <button
+            onClick={handleLogin}
+            style={styles.loginBtn}
+            onMouseEnter={(e) =>
+              (e.target.style.background = "#1565c0")
+            }
+            onMouseLeave={(e) =>
+              (e.target.style.background = "#1e88e5")
+            }
+          >
+            Login
+          </button>
 
-      <p>
-        {isAdminForm ? "Back to " : "Are you admin? "}
-        <span onClick={() => setIsAdminForm(!isAdminForm)} style={{ color: "blue", cursor: "pointer" }}>
-          {isAdminForm ? "Student Login" : "Admin Login"}
-        </span>
-      </p>
+          <p
+            onClick={() => navigate("/forgot-password")}
+            style={styles.link}
+          >
+            Forgot Password?
+          </p>
 
-      {!isAdminForm && (
-        <p onClick={() => navigate("/register")} style={{ cursor: "pointer", color: "blue" }}>
-          Register
-        </p>
-      )}
+          <div style={{ margin: "15px 0" }}>
+            <GoogleLogin onSuccess={handleGoogleSuccess} />
+          </div>
+
+          <p style={styles.switchText}>
+            {isAdminForm ? "Back to " : "Are you admin? "}
+            <span
+              onClick={() => setIsAdminForm(!isAdminForm)}
+              style={styles.switchLink}
+            >
+              {isAdminForm ? "Student Login" : "Admin Login"}
+            </span>
+          </p>
+
+          {!isAdminForm && (
+            <p
+              onClick={() => navigate("/register")}
+              style={styles.registerLink}
+            >
+              Register
+            </p>
+          )}
+        </div>
+      </div>
     </div>
-  );
-}
+  </div>
+);
 const styles = {
   wrapper: {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     height: "100vh",
-    background: "#f4f6f8",
+    background: "linear-gradient(135deg, #667eea, #764ba2)",
     padding: "20px",
   },
+
   container: {
     display: "flex",
-    width: "700px",
-    height: "450px",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-    borderRadius: "12px",
+    width: "750px",
+    height: "480px",
+    borderRadius: "15px",
     overflow: "hidden",
+    boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+    background: "#fff",
   },
+
   left: {
     flex: 1,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "#e0e0e0",
-    padding: "15px",
+    background: "#ddd",
   },
+
   image: {
     width: "100%",
     height: "100%",
     objectFit: "cover",
-    borderRadius: "12px",
   },
+
   right: {
     flex: 1,
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    background: "#ffffff",
     padding: "20px",
   },
+
   card: {
     width: "100%",
-    display: "flex",
-    flexDirection: "column",
     textAlign: "center",
-    padding: "20px",
   },
-  title: { marginBottom: "15px", fontSize: "22px", fontWeight: "bold" },
+
+  title: {
+    marginBottom: "20px",
+    fontSize: "24px",
+    fontWeight: "bold",
+    color: "#333",
+  },
+
   input: {
-    width: "93%",
-    padding: "10px",
-    margin: "8px 0",
-    borderRadius: "5px",
+    width: "90%",
+    padding: "12px",
+    margin: "10px 0",
+    borderRadius: "8px",
     border: "1px solid #ccc",
+    outline: "none",
+    transition: "0.3s",
   },
+
   loginBtn: {
-    width: "100%",
-    padding: "10px",
+    width: "95%",
+    padding: "12px",
     marginTop: "10px",
     background: "#1e88e5",
     color: "white",
     border: "none",
-    borderRadius: "5px",
+    borderRadius: "8px",
     cursor: "pointer",
+    fontWeight: "bold",
+    transition: "0.3s",
   },
+
+  link: {
+    marginTop: "10px",
+    color: "#1e88e5",
+    cursor: "pointer",
+    fontSize: "14px",
+  },
+
   switchText: {
     marginTop: "12px",
     fontSize: "14px",
   },
+
   switchLink: {
     color: "#1e88e5",
     cursor: "pointer",
     fontWeight: "bold",
   },
-  registerText: {
-    marginTop: "8px",
-    fontSize: "14px",
-  },
+
   registerLink: {
+    marginTop: "8px",
     color: "#1e88e5",
     cursor: "pointer",
     fontWeight: "bold",
+  },
+
+  error: {
+    color: "red",
+    marginBottom: "10px",
+    fontSize: "14px",
   },
 };
